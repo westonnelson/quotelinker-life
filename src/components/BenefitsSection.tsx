@@ -14,7 +14,7 @@ const benefits = [{
   id: 3,
   icon: ShieldCheck,
   title: "Coverage You Can Trust",
-  description: "We work with A-rated insurers to ensure your family is protected by financially strong companies."
+  description: "We work with top insurers to ensure your family is protected by financially strong companies."
 }, {
   id: 4,
   icon: Heart,

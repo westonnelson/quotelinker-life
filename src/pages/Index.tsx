@@ -92,7 +92,7 @@ const Index = () => {
           
           <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
             <p>© {new Date().getFullYear()} QuoteLinker LLC. All rights reserved.</p>
-            <p className="mt-1">Licensed insurance agents. QuoteLinker is not an insurer or an insurance agency. QuoteLinker connects consumers interested in life insurance coverage with licensed professionals. Coverage subject to policy terms and conditions governed by submitted life policy applications.</p>
+            <p className="mt-1">QuoteLinker only sends your information to Licensed Insurance Agents. QuoteLinker is not an insurer or an insurance agency. QuoteLinker connects consumers interested in life insurance coverage with licensed professionals. Coverage subject to policy terms and conditions governed by submitted life policy applications.</p>
           </div>
         </div>
       </footer>

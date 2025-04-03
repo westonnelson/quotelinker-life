@@ -36,7 +36,7 @@ const AppointmentSuccess = () => {
               <div className="bg-primary/10 text-primary rounded-full p-1 mt-0.5 flex-shrink-0">
                 <span className="block h-4 w-4 text-xs font-bold flex items-center justify-center">1</span>
               </div>
-              <p>A licensed insurance expert will review your information</p>
+              <p>A licensed insurance agent will review your information</p>
             </li>
             <li className="flex items-start gap-3">
               <div className="bg-primary/10 text-primary rounded-full p-1 mt-0.5 flex-shrink-0">
