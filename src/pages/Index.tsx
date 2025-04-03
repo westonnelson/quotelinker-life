@@ -14,7 +14,7 @@ const Index = () => {
         <div className="container-custom flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">LifeLifeline</span>
+            <span className="font-bold text-lg">QuoteLinker</span>
           </div>
           
           <div className="hidden md:flex items-center gap-6">
@@ -27,7 +27,7 @@ const Index = () => {
           </div>
           
           <a href="#lead-form" className="btn-primary">
-            Get Free Quote
+            Get My Free Quote
           </a>
         </div>
       </header>
@@ -50,7 +50,7 @@ const Index = () => {
               href="#lead-form" 
               className="bg-white text-primary hover:bg-gray-100 font-medium py-3 px-8 rounded-md transition-colors duration-300"
             >
-              Get Your Free Quote Now
+              Get My Free Quote Now
             </a>
           </div>
         </section>
@@ -63,7 +63,7 @@ const Index = () => {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="h-6 w-6 text-white" />
-                <span className="font-bold text-lg">LifeLifeline</span>
+                <span className="font-bold text-lg">QuoteLinker</span>
               </div>
               <p className="text-gray-400 text-sm mb-4">
                 Helping families secure their financial future with reliable, affordable life insurance coverage.
@@ -104,7 +104,7 @@ const Index = () => {
                   <Mail className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm">Email us at</p>
-                    <a href="mailto:support@lifelifeline.com" className="font-medium hover:text-primary">support@lifelifeline.com</a>
+                    <a href="mailto:support@quotelinker.com" className="font-medium hover:text-primary">support@quotelinker.com</a>
                   </div>
                 </div>
               </div>
@@ -122,7 +122,7 @@ const Index = () => {
           </div>
           
           <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
-            <p>© {new Date().getFullYear()} LifeLifeline. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} QuoteLinker LLC. All rights reserved.</p>
             <p className="mt-1">
               Licensed insurance professionals. Not an insurer. Coverage subject to policy terms and conditions.
             </p>

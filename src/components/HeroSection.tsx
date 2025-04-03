@@ -18,12 +18,12 @@ export const HeroSection = () => {
             </h1>
             
             <p className="paragraph text-gray-600 max-w-lg">
-              Protect your loved ones' financial future today. Get matched with the perfect policy in minutes and secure your family's tomorrow.
+              Protect your loved ones' financial future today. Get matched with the perfect policy in minutes and secure your family's tomorrow with QuoteLinker.
             </p>
             
             <div className="flex flex-wrap gap-4 pt-2">
               <a href="#lead-form" className="btn-primary">
-                Get Free Quote
+                Get My Free Quote
               </a>
               <a href="#benefits" className="text-primary hover:text-primary-hover font-medium py-2 px-4 transition-colors duration-200">
                 Learn More
