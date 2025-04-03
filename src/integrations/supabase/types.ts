@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      leads: {
+        Row: {
+          age: string
+          coverage_amount: string
+          created_at: string
+          email: string
+          email_sent: boolean | null
+          first_name: string
+          gender: string
+          hubspot_id: string | null
+          id: string
+          last_name: string
+          phone: string
+          preferred_contact: string
+          tobacco_use: string
+          zip_code: string
+        }
+        Insert: {
+          age: string
+          coverage_amount: string
+          created_at?: string
+          email: string
+          email_sent?: boolean | null
+          first_name: string
+          gender: string
+          hubspot_id?: string | null
+          id?: string
+          last_name: string
+          phone: string
+          preferred_contact: string
+          tobacco_use: string
+          zip_code: string
+        }
+        Update: {
+          age?: string
+          coverage_amount?: string
+          created_at?: string
+          email?: string
+          email_sent?: boolean | null
+          first_name?: string
+          gender?: string
+          hubspot_id?: string | null
+          id?: string
+          last_name?: string
+          phone?: string
+          preferred_contact?: string
+          tobacco_use?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
       Life: {
         Row: {
           age: string

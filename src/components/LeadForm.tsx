@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 type FormData = {
   firstName: string;
@@ -163,8 +164,57 @@ export const LeadForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Save to Supabase
+      const { data: leadData, error: leadError } = await supabase
+        .from('leads')
+        .insert({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          age: formData.age,
+          gender: formData.gender,
+          tobacco_use: formData.tobaccoUse,
+          coverage_amount: formData.coverageAmount,
+          preferred_contact: formData.preferredContact,
+          zip_code: formData.zipCode
+        })
+        .select()
+        .single();
+
+      if (leadError) {
+        throw new Error(`Database error: ${leadError.message}`);
+      }
+
+      // Process in parallel to speed things up
+      const leadId = leadData.id;
+      
+      // Submit to HubSpot
+      const hubspotPromise = fetch('/functions/v1/create-hubspot-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ leadId }),
+      }).then(res => {
+        if (!res.ok) throw new Error('HubSpot integration failed');
+        return res.json();
+      });
+
+      // Send confirmation email
+      const emailPromise = fetch('/functions/v1/send-confirmation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ leadId }),
+      }).then(res => {
+        if (!res.ok) throw new Error('Email sending failed');
+        return res.json();
+      });
+
+      // Wait for both to complete
+      await Promise.allSettled([hubspotPromise, emailPromise]);
       
       // Show success message
       toast({
@@ -174,10 +224,11 @@ export const LeadForm = () => {
       
       // Redirect to success page
       navigate('/appointment-success');
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Submission error:", error);
       toast({
         title: "Submission Failed",
-        description: "Please try again later.",
+        description: error.message || "Please try again later.",
         variant: "destructive"
       });
     } finally {
