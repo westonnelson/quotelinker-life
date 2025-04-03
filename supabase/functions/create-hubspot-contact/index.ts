@@ -19,7 +19,19 @@ serve(async (req) => {
   }
 
   try {
-    const { leadId } = await req.json();
+    const { 
+      leadId, 
+      firstName, 
+      lastName, 
+      email, 
+      phone, 
+      age, 
+      gender, 
+      tobaccoUse, 
+      coverageAmount, 
+      preferredContact, 
+      zipCode 
+    } = await req.json();
     
     if (!leadId) {
       throw new Error("Lead ID is required");
@@ -28,17 +40,6 @@ serve(async (req) => {
     // Initialize Supabase client with service role key for admin actions
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get lead data
-    const { data: lead, error: leadError } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('id', leadId)
-      .single();
-    
-    if (leadError || !lead) {
-      throw new Error(`Failed to fetch lead data: ${leadError?.message}`);
-    }
-
     // Create contact in HubSpot
     const hubspotResponse = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
       method: "POST",
@@ -48,16 +49,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         properties: {
-          firstname: lead.first_name,
-          lastname: lead.last_name,
-          email: lead.email,
-          phone: lead.phone,
-          age: lead.age,
-          gender: lead.gender,
-          tobacco_use: lead.tobacco_use,
-          coverage_amount: lead.coverage_amount,
-          preferred_contact_method: lead.preferred_contact,
-          zip: lead.zip_code,
+          firstname: firstName,
+          lastname: lastName,
+          email: email,
+          phone: phone,
+          age: age,
+          gender: gender,
+          tobacco_use: tobaccoUse,
+          coverage_amount: coverageAmount,
+          preferred_contact_method: preferredContact,
+          zip: zipCode,
           lifecyclestage: "lead",
           lead_source: "website",
           lead_status: "new"
@@ -69,16 +70,6 @@ serve(async (req) => {
     
     if (!hubspotResponse.ok) {
       throw new Error(`HubSpot API error: ${JSON.stringify(hubspotData)}`);
-    }
-
-    // Update lead with HubSpot ID
-    const { error: updateError } = await supabase
-      .from('leads')
-      .update({ hubspot_id: hubspotData.id })
-      .eq('id', leadId);
-    
-    if (updateError) {
-      throw new Error(`Failed to update lead with HubSpot ID: ${updateError.message}`);
     }
 
     return new Response(

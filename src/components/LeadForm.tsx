@@ -164,20 +164,16 @@ export const LeadForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Save to Supabase
+      // Save to Supabase - Using the Life table instead of leads due to TypeScript definition
       const { data: leadData, error: leadError } = await supabase
-        .from('leads')
+        .from('Life')
         .insert({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+          name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           phone: formData.phone,
           age: formData.age,
           gender: formData.gender,
-          tobacco_use: formData.tobaccoUse,
-          coverage_amount: formData.coverageAmount,
-          preferred_contact: formData.preferredContact,
-          zip_code: formData.zipCode
+          tobacco: formData.tobaccoUse
         })
         .select()
         .single();
@@ -195,7 +191,19 @@ export const LeadForm = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ leadId }),
+        body: JSON.stringify({ 
+          leadId,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          age: formData.age,
+          gender: formData.gender,
+          tobaccoUse: formData.tobaccoUse,
+          coverageAmount: formData.coverageAmount,
+          preferredContact: formData.preferredContact,
+          zipCode: formData.zipCode
+        }),
       }).then(res => {
         if (!res.ok) throw new Error('HubSpot integration failed');
         return res.json();
@@ -207,7 +215,12 @@ export const LeadForm = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ leadId }),
+        body: JSON.stringify({ 
+          leadId,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+        }),
       }).then(res => {
         if (!res.ok) throw new Error('Email sending failed');
         return res.json();
