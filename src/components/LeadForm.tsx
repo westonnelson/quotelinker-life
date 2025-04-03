@@ -508,7 +508,7 @@ export const LeadForm = () => {
                 <h3 className="font-medium">Want to speak with an agent?</h3>
                 <p className="text-sm text-gray-500">
                   <a 
-                    href="#appointment-booking" 
+                    href="/appointment-success" 
                     className="text-primary hover:underline"
                   >
                     Schedule a call

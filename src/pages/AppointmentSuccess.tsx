@@ -1,12 +1,25 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 
 const AppointmentSuccess = () => {
+  useEffect(() => {
+    // Load Calendly widget script
+    const script = document.createElement('script');
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      // Clean up script when component unmounts
+      document.body.removeChild(script);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+    <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center mb-8">
         <div className="flex justify-center mb-6">
           <CheckCircle className="h-16 w-16 text-success" />
         </div>
@@ -40,11 +53,7 @@ const AppointmentSuccess = () => {
           </ol>
         </div>
         
-        <div className="border-t border-gray-200 pt-6 space-y-4">
-          <p className="text-sm text-gray-500">
-            Have questions while you wait? Call us at <span className="font-medium text-gray-800">(888) 555-1234</span>
-          </p>
-          
+        <div className="border-t border-gray-200 pt-6">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-primary hover:text-primary-hover"
@@ -53,6 +62,18 @@ const AppointmentSuccess = () => {
             Return to Homepage
           </Link>
         </div>
+      </div>
+      
+      <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold mb-4 text-center">Schedule a Call with an Agent</h2>
+        <p className="text-gray-600 text-center mb-6">
+          Want to discuss your options right away? Schedule a call with one of our licensed insurance experts.
+        </p>
+        <div 
+          className="calendly-inline-widget" 
+          data-url="https://calendly.com/quotelinker-support/15min?hide_event_type_details=1&hide_gdpr_banner=1" 
+          style={{ minWidth: "320px", height: "700px" }}
+        ></div>
       </div>
     </div>
   );
