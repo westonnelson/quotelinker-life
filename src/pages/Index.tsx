@@ -1,9 +1,11 @@
+
 import React from 'react';
 import HeroSection from '@/components/HeroSection';
 import LeadForm from '@/components/LeadForm';
 import TestimonialSection from '@/components/TestimonialSection';
 import BenefitsSection from '@/components/BenefitsSection';
 import { Shield, Phone, Mail } from 'lucide-react';
+
 const Index = () => {
   return <div className="min-h-screen">
       {/* Header */}
@@ -53,8 +55,8 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="flex flex-col items-center">
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="h-6 w-6 text-white" />
                 <span className="font-bold text-lg">QuoteLinker</span>
@@ -62,7 +64,7 @@ const Index = () => {
               <p className="text-gray-400 text-sm mb-4">
                 Helping families secure their financial future with reliable, affordable life insurance coverage.
               </p>
-              <div className="flex gap-4">
+              <div className="flex gap-4 justify-center">
                 <a href="#" className="text-gray-400 hover:text-white">
                   <span className="sr-only">Twitter</span>
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -84,17 +86,17 @@ const Index = () => {
               </div>
             </div>
             
-            <div>
+            <div className="flex flex-col items-center">
               <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  
+                <div className="flex items-center gap-3 justify-center">
+                  <Phone className="h-5 w-5 text-gray-400" />
                   <div>
-                    
-                    
+                    <p className="text-sm">Call us at</p>
+                    <a href="tel:8001234567" className="font-medium hover:text-primary">800-123-4567</a>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3 justify-center">
                   <Mail className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm">Email us at</p>
@@ -104,7 +106,7 @@ const Index = () => {
               </div>
             </div>
             
-            <div>
+            <div className="flex flex-col items-center">
               <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
