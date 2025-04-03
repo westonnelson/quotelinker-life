@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock, DollarSign, ShieldCheck, Heart } from 'lucide-react';
+import { Clock, DollarSign, ShieldCheck, Heart, Check, Calendar } from 'lucide-react';
 
 const benefits = [
   {
