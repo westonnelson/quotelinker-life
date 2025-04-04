@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -80,7 +79,6 @@ export const LeadForm = () => {
 
   const validateCurrentStep = (): boolean => {
     if (currentStep === 0) {
-      // Validate first step
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
         toast({
           title: "Missing Information",
@@ -89,7 +87,6 @@ export const LeadForm = () => {
         });
         return false;
       }
-      // Simple email validation
       if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
         toast({
           title: "Invalid Email",
@@ -98,7 +95,6 @@ export const LeadForm = () => {
         });
         return false;
       }
-      // Simple phone validation
       if (!/^[0-9]{10}$/.test(formData.phone.replace(/\D/g, ''))) {
         toast({
           title: "Invalid Phone Number",
@@ -108,7 +104,6 @@ export const LeadForm = () => {
         return false;
       }
     } else if (currentStep === 1) {
-      // Validate second step
       if (!formData.age || !formData.gender || !formData.coverageAmount) {
         toast({
           title: "Missing Information",
@@ -117,7 +112,6 @@ export const LeadForm = () => {
         });
         return false;
       }
-      // Age validation
       const age = parseInt(formData.age);
       if (isNaN(age) || age < 18 || age > 85) {
         toast({
@@ -128,7 +122,6 @@ export const LeadForm = () => {
         return false;
       }
     } else if (currentStep === 2) {
-      // Validate third step
       if (!formData.zipCode) {
         toast({
           title: "Missing Information",
@@ -137,7 +130,6 @@ export const LeadForm = () => {
         });
         return false;
       }
-      // Zip code validation
       if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode)) {
         toast({
           title: "Invalid ZIP Code",
@@ -160,11 +152,9 @@ export const LeadForm = () => {
       return;
     }
     
-    // Final submission
     setIsSubmitting(true);
     
     try {
-      // Save to Supabase - Using the Life table instead of leads due to TypeScript definition
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -182,11 +172,27 @@ export const LeadForm = () => {
         throw new Error(`Database error: ${leadError.message}`);
       }
 
-      // Process in parallel to speed things up
       const leadId = leadData.id;
       
-      // Submit to HubSpot
-      const hubspotPromise = fetch('/functions/v1/create-hubspot-contact', {
+      const emailPromise = fetch('/functions/v1/send-confirmation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          leadId,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+        }),
+      }).then(res => {
+        if (!res.ok) throw new Error('Email sending failed');
+        return res.json();
+      });
+
+      await emailPromise;
+      
+      fetch('/functions/v1/create-hubspot-contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,38 +210,15 @@ export const LeadForm = () => {
           preferredContact: formData.preferredContact,
           zipCode: formData.zipCode
         }),
-      }).then(res => {
-        if (!res.ok) throw new Error('HubSpot integration failed');
-        return res.json();
+      }).catch(error => {
+        console.error("HubSpot integration error:", error);
       });
-
-      // Send confirmation email
-      const emailPromise = fetch('/functions/v1/send-confirmation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          leadId,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-        }),
-      }).then(res => {
-        if (!res.ok) throw new Error('Email sending failed');
-        return res.json();
-      });
-
-      // Wait for both to complete
-      await Promise.allSettled([hubspotPromise, emailPromise]);
       
-      // Show success message
       toast({
         title: "Form Submitted Successfully",
         description: "We'll contact you shortly with your quote!",
       });
       
-      // Redirect to success page
       navigate('/appointment-success');
     } catch (error: any) {
       console.error("Submission error:", error);
@@ -423,12 +406,18 @@ export const LeadForm = () => {
       <div className="container-custom max-w-3xl">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="bg-primary px-6 py-6 text-white">
-            <h2 className="text-2xl font-bold">Get Your Free Life Insurance Quote</h2>
+            <div className="flex items-center gap-2 mb-2">
+              <img 
+                src="/quotelinker-logo.png" 
+                alt="QuoteLinker Logo" 
+                className="h-6 w-auto invert" 
+              />
+              <h2 className="text-2xl font-bold">Get Your Free Life Insurance Quote</h2>
+            </div>
             <p className="text-primary-foreground/80">Complete the form below to receive your personalized quote</p>
           </div>
           
           <div className="p-6">
-            {/* Progress steps */}
             <div className="flex justify-between mb-8">
               {formSteps.map((step, index) => (
                 <div 
@@ -460,7 +449,6 @@ export const LeadForm = () => {
               ))}
             </div>
             
-            {/* Form */}
             <form onSubmit={handleSubmit}>
               {renderStep()}
               

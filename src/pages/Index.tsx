@@ -4,7 +4,7 @@ import HeroSection from '@/components/HeroSection';
 import LeadForm from '@/components/LeadForm';
 import TestimonialSection from '@/components/TestimonialSection';
 import BenefitsSection from '@/components/BenefitsSection';
-import { Shield, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 const Index = () => {
   return <div className="min-h-screen">
@@ -12,7 +12,11 @@ const Index = () => {
       <header className="bg-white shadow-sm py-4">
         <div className="container-custom flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
+            <img 
+              src="/quotelinker-logo.png" 
+              alt="QuoteLinker Logo" 
+              className="h-8 w-auto"
+            />
             <span className="font-bold text-lg">QuoteLinker</span>
           </div>
           
@@ -58,7 +62,11 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2 mb-4">
-                <Shield className="h-6 w-6 text-white" />
+                <img 
+                  src="/quotelinker-logo.png" 
+                  alt="QuoteLinker Logo" 
+                  className="h-8 w-auto invert" 
+                />
                 <span className="font-bold text-lg">QuoteLinker</span>
               </div>
               <p className="text-gray-400 text-sm mb-4">
@@ -85,7 +93,11 @@ const Index = () => {
                 <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white">Terms of Service</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Life Insurance FAQ</a></li>
+                <li>
+                  <a href="/appointment-success" className="text-gray-400 hover:text-white">
+                    Schedule a Call
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

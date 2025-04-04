@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Shield } from 'lucide-react';
 
 export const HeroSection = () => {
   return (
@@ -9,7 +8,11 @@ export const HeroSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6 animate-fade-in">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-primary px-4 py-1.5 rounded-full">
-              <Shield className="h-4 w-4" />
+              <img 
+                src="/quotelinker-logo.png" 
+                alt="QuoteLinker Logo" 
+                className="h-4 w-auto" 
+              />
               <span className="text-sm font-medium">Trusted Protection For Your Family</span>
             </div>
             
@@ -25,8 +28,8 @@ export const HeroSection = () => {
               <a href="#lead-form" className="btn-primary">
                 Get My Free Quote
               </a>
-              <a href="#benefits" className="text-primary hover:text-primary-hover font-medium py-2 px-4 transition-colors duration-200">
-                Learn More
+              <a href="/appointment-success" className="text-primary hover:text-primary-hover font-medium py-2 px-4 transition-colors duration-200">
+                Schedule a Call
               </a>
             </div>
             
