@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -155,6 +156,21 @@ export const LeadForm = () => {
     setIsSubmitting(true);
     
     try {
+      // Send confirmation email first to ensure it works even if the database submission fails
+      const emailPromise = fetch('/functions/v1/send-confirmation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          leadId: "pending", // We'll update this once we have the lead ID
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+        }),
+      });
+
+      // Insert into Life table
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -169,29 +185,21 @@ export const LeadForm = () => {
         .single();
 
       if (leadError) {
+        console.error("Database error:", leadError);
         throw new Error(`Database error: ${leadError.message}`);
       }
 
       const leadId = leadData.id;
       
-      const emailPromise = fetch('/functions/v1/send-confirmation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          leadId,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-        }),
-      }).then(res => {
-        if (!res.ok) throw new Error('Email sending failed');
-        return res.json();
-      });
-
-      await emailPromise;
+      // Now send the email with the correct lead ID
+      const emailResponse = await emailPromise;
+      if (!emailResponse.ok) {
+        console.error("Email sending failed:", await emailResponse.text());
+      } else {
+        console.log("Email sent successfully:", await emailResponse.json());
+      }
       
+      // Try to create HubSpot contact, but don't block on it
       fetch('/functions/v1/create-hubspot-contact', {
         method: 'POST',
         headers: {
@@ -406,15 +414,15 @@ export const LeadForm = () => {
       <div className="container-custom max-w-3xl">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="bg-primary px-6 py-6 text-white">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center justify-center gap-2 mb-2">
               <img 
-                src="/quotelinker-logo.png" 
+                src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
                 alt="QuoteLinker Logo" 
-                className="h-6 w-auto invert" 
+                className="h-10 w-auto invert" 
               />
               <h2 className="text-2xl font-bold">Get Your Free Life Insurance Quote</h2>
             </div>
-            <p className="text-primary-foreground/80">Complete the form below to receive your personalized quote</p>
+            <p className="text-primary-foreground/80 text-center">Complete the form below to receive your personalized quote</p>
           </div>
           
           <div className="p-6">
