@@ -32,7 +32,9 @@ const AppointmentSuccess = () => {
     
     return () => {
       // Clean up script on component unmount
-      document.body.removeChild(script);
+      if (script.parentNode) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
@@ -40,7 +42,7 @@ const AppointmentSuccess = () => {
     <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
       <div className="flex items-center justify-center gap-2 my-6">
         <img 
-          src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
+          src="/quotelinker-logo.png" 
           alt="QuoteLinker Logo" 
           className="h-12 w-auto" 
         />
@@ -79,7 +81,7 @@ const AppointmentSuccess = () => {
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-center gap-2 mb-4">
           <img 
-            src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
+            src="/quotelinker-logo.png" 
             alt="QuoteLinker Logo" 
             className="h-8 w-auto" 
           />

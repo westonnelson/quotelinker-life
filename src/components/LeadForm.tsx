@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -9,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
 
 type FormData = {
   firstName: string;
@@ -416,7 +416,7 @@ export const LeadForm = () => {
           <div className="bg-primary px-6 py-6 text-white">
             <div className="flex items-center justify-center gap-2 mb-2">
               <img 
-                src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
+                src="/quotelinker-logo.png" 
                 alt="QuoteLinker Logo" 
                 className="h-10 w-auto invert" 
               />
@@ -503,12 +503,12 @@ export const LeadForm = () => {
               <div>
                 <h3 className="font-medium">Want to speak with an agent?</h3>
                 <p className="text-sm text-gray-500">
-                  <a 
-                    href="/appointment-success" 
+                  <Link 
+                    to="/appointment-success" 
                     className="text-primary hover:underline"
                   >
                     Schedule a call
-                  </a> with one of our licensed insurance experts.
+                  </Link> with one of our licensed insurance experts.
                 </p>
               </div>
             </div>
