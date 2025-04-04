@@ -38,7 +38,7 @@ serve(async (req) => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <img src="https://lovable-uploads.s3.amazonaws.com/02695231-087f-48fd-abb1-de4c3eb723d7.png" alt="QuoteLinker Logo" style="width: 120px; height: auto;">
+              <img src="https://lovable-uploads.s3.amazonaws.com/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" alt="QuoteLinker Logo" style="width: 120px; height: auto;">
             </div>
             <h2 style="color: #0056b3;">Thank you for your quote request, ${firstName}!</h2>
             <p>We've received your life insurance quote request and our team is reviewing your information.</p>

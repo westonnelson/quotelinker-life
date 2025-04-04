@@ -9,7 +9,7 @@ export const HeroSection = () => {
           <div className="space-y-6 animate-fade-in">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-primary px-4 py-1.5 rounded-full">
               <img 
-                src="/quotelinker-logo.png" 
+                src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
                 alt="QuoteLinker Logo" 
                 className="h-4 w-auto" 
               />

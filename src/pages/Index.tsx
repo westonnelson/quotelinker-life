@@ -1,4 +1,3 @@
-
 import React from 'react';
 import HeroSection from '@/components/HeroSection';
 import LeadForm from '@/components/LeadForm';
@@ -13,7 +12,7 @@ const Index = () => {
         <div className="container-custom flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img 
-              src="/quotelinker-logo.png" 
+              src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
               alt="QuoteLinker Logo" 
               className="h-8 w-auto"
             />
@@ -63,7 +62,7 @@ const Index = () => {
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2 mb-4">
                 <img 
-                  src="/quotelinker-logo.png" 
+                  src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
                   alt="QuoteLinker Logo" 
                   className="h-8 w-auto invert" 
                 />
