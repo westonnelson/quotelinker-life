@@ -89,23 +89,23 @@ const Index = () => {
             
             <div className="flex flex-col items-center md:items-start">
               <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <Mail className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm">Email us at</p>
                     <a href="mailto:support@quotelinker.com" className="font-medium hover:text-quotelinker">support@quotelinker.com</a>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <div className="flex items-start gap-3">
+                  <Phone className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm">Call us at</p>
                     <a href="tel:+18005551234" className="font-medium hover:text-quotelinker">(800) 555-1234</a>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm">Available</p>
                     <p className="font-medium">Mon-Fri, 9am-6pm EST</p>
