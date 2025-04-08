@@ -18,7 +18,7 @@ serve(async (req) => {
   try {
     const { leadId, firstName, lastName, email } = await req.json();
     
-    console.log("Sending confirmation email to:", email);
+    console.log("Starting email sending process for:", email);
     
     if (!email) {
       throw new Error("Email is required");
@@ -28,6 +28,8 @@ serve(async (req) => {
       throw new Error("Resend API key is not configured");
     }
 
+    console.log("Sending confirmation email using Resend API");
+    
     // Send confirmation email using Resend
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -59,24 +61,18 @@ serve(async (req) => {
         `
       })
     });
-
-    // Properly handle JSON parsing errors
-    let emailData;
-    try {
-      emailData = await emailResponse.json();
-    } catch (parseError) {
-      console.error("Failed to parse email API response:", parseError);
-      // Get the response text to debug
-      const responseText = await emailResponse.text();
-      console.log("Response text:", responseText);
-      throw new Error(`Email API response parsing error: ${parseError.message}. Response: ${responseText.substring(0, 200)}`);
-    }
     
     console.log("Email API response status:", emailResponse.status);
     
+    // More detailed error handling for the response
     if (!emailResponse.ok) {
-      throw new Error(`Email API error: ${JSON.stringify(emailData)}`);
+      const errorText = await emailResponse.text();
+      console.error("Email API error response:", errorText);
+      throw new Error(`Email API error (${emailResponse.status}): ${errorText}`);
     }
+
+    const emailData = await emailResponse.json();
+    console.log("Email sent successfully, response:", emailData);
 
     return new Response(
       JSON.stringify({ success: true, messageId: emailData.id }),

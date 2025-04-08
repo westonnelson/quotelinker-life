@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -24,7 +23,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-// Form validation schema
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -77,7 +75,6 @@ export const LeadForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Initialize form with React Hook Form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: initialFormData,
@@ -126,7 +123,6 @@ export const LeadForm = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    // If not on the last step, just move to the next step
     if (currentStep < formSteps.length - 1) {
       handleNextStep();
       return;
@@ -137,16 +133,6 @@ export const LeadForm = () => {
     
     try {
       console.log("Starting form submission process");
-      
-      // First insert into Life table
-      console.log("Inserting into Life table with data:", {
-        name: `${data.firstName} ${data.lastName}`,
-        email: data.email,
-        phone: data.phone,
-        age: data.age,
-        gender: data.gender,
-        tobacco: data.tobaccoUse
-      });
       
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
@@ -169,9 +155,8 @@ export const LeadForm = () => {
       console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
-      // Send confirmation email
-      console.log("Sending confirmation email to:", data.email);
       try {
+        console.log("Sending confirmation email to:", data.email);
         const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
           method: 'POST',
           headers: {
@@ -185,7 +170,6 @@ export const LeadForm = () => {
           }),
         });
 
-        // Check if response is OK before trying to parse JSON
         if (!emailResponse.ok) {
           const errorText = await emailResponse.text();
           console.error("Email sending failed with status:", emailResponse.status, "Response:", errorText);
@@ -194,9 +178,13 @@ export const LeadForm = () => {
         
         const emailResult = await emailResponse.json();
         console.log("Email sent successfully:", emailResult);
+        
+        toast({
+          title: "Confirmation Email Sent",
+          description: "Check your inbox for details about your quote request.",
+        });
       } catch (emailError) {
         console.error("Email sending error:", emailError);
-        // Continue with the form submission even if email fails
         toast({
           title: "Email Notification Issue",
           description: "We couldn't send you a confirmation email, but your quote request was saved.",
@@ -204,7 +192,6 @@ export const LeadForm = () => {
         });
       }
       
-      // Create HubSpot contact
       try {
         console.log("Creating HubSpot contact");
         const hubspotResponse = await fetch('/functions/v1/create-hubspot-contact', {
@@ -230,11 +217,9 @@ export const LeadForm = () => {
         if (!hubspotResponse.ok) {
           const hubspotError = await hubspotResponse.text();
           console.error("HubSpot integration error:", hubspotError);
-          // We don't want to block the user flow if HubSpot fails, just log it
         }
       } catch (hubspotError) {
         console.error("HubSpot integration error:", hubspotError);
-        // Don't block submission for HubSpot errors
       }
       
       toast({
