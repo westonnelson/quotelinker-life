@@ -37,7 +37,7 @@ const formSchema = z.object({
   gender: z.string().min(1, "Gender is required"),
   tobaccoUse: z.string(),
   coverageAmount: z.string().min(1, "Coverage amount is required"),
-  preferredContact: z.string(),
+  bestTimeToContact: z.string(),
   zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
 });
 
@@ -52,7 +52,7 @@ const initialFormData: FormData = {
   gender: '',
   tobaccoUse: 'no',
   coverageAmount: '$100,000',
-  preferredContact: 'email',
+  bestTimeToContact: 'morning',
   zipCode: '',
 };
 
@@ -104,7 +104,7 @@ export const LeadForm = () => {
     } else if (currentStep === 1) {
       fieldsToValidate = ['age', 'gender', 'tobaccoUse', 'coverageAmount'];
     } else if (currentStep === 2) {
-      fieldsToValidate = ['preferredContact', 'zipCode'];
+      fieldsToValidate = ['bestTimeToContact', 'zipCode'];
     }
     
     try {
@@ -222,7 +222,7 @@ export const LeadForm = () => {
             gender: data.gender,
             tobaccoUse: data.tobaccoUse,
             coverageAmount: data.coverageAmount,
-            preferredContact: data.preferredContact,
+            bestTimeToContact: data.bestTimeToContact,
             zipCode: data.zipCode
           }),
         });
@@ -446,10 +446,10 @@ export const LeadForm = () => {
           <div className="space-y-4">
             <FormField
               control={form.control}
-              name="preferredContact"
+              name="bestTimeToContact"
               render={({ field }) => (
                 <FormItem className="space-y-2">
-                  <FormLabel>Preferred Contact Method</FormLabel>
+                  <FormLabel>Best Time to Contact</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -457,16 +457,16 @@ export const LeadForm = () => {
                       className="flex flex-col gap-2 pt-2"
                     >
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="email" id="contact-email" />
-                        <Label htmlFor="contact-email">Email</Label>
+                        <RadioGroupItem value="morning" id="time-morning" />
+                        <Label htmlFor="time-morning">Morning (8am - 12pm)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="phone" id="contact-phone" />
-                        <Label htmlFor="contact-phone">Phone</Label>
+                        <RadioGroupItem value="afternoon" id="time-afternoon" />
+                        <Label htmlFor="time-afternoon">Afternoon (12pm - 5pm)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="both" id="contact-both" />
-                        <Label htmlFor="contact-both">Both</Label>
+                        <RadioGroupItem value="evening" id="time-evening" />
+                        <Label htmlFor="time-evening">Evening (5pm - 8pm)</Label>
                       </div>
                     </RadioGroup>
                   </FormControl>
@@ -483,7 +483,7 @@ export const LeadForm = () => {
                   <FormControl>
                     <Input
                       id="zipCode"
-                      placeholder="Enter your ZIP code"
+                      placeholder="Enter your 5-digit ZIP code"
                       maxLength={10}
                       {...field}
                     />
