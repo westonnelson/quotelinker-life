@@ -40,8 +40,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "QuoteLinker <support@quotelinker.com>",
-        to: email,
-        bcc: "support@quotelinker.com", // Direct BCC to support email
+        to: [email], // Ensure email is in an array as per Resend's API
+        bcc: ["support@quotelinker.com"], // Ensure BCC is an array
         subject: "Your Life Insurance Quote Request",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

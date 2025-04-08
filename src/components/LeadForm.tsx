@@ -283,7 +283,7 @@ export const LeadForm = () => {
                     <FormControl>
                       <Input
                         id="firstName"
-                        placeholder="Enter your first name"
+                        placeholder="John"
                         {...field}
                       />
                     </FormControl>
@@ -300,7 +300,7 @@ export const LeadForm = () => {
                     <FormControl>
                       <Input
                         id="lastName"
-                        placeholder="Enter your last name"
+                        placeholder="Smith"
                         {...field}
                       />
                     </FormControl>
@@ -319,7 +319,7 @@ export const LeadForm = () => {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder="john.smith@example.com"
                       {...field}
                     />
                   </FormControl>
@@ -361,7 +361,7 @@ export const LeadForm = () => {
                       <Input
                         id="age"
                         type="number"
-                        placeholder="Enter your age"
+                        placeholder="35"
                         min="18"
                         max="85"
                         {...field}
@@ -495,7 +495,7 @@ export const LeadForm = () => {
                   <FormControl>
                     <Input
                       id="zipCode"
-                      placeholder="Enter your 5-digit ZIP code"
+                      placeholder="55305"
                       maxLength={10}
                       {...field}
                     />
