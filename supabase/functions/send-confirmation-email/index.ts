@@ -38,7 +38,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`
       },
       body: JSON.stringify({
-        from: "quotes@quotelinker.com",
+        from: "support@quotelinker.com",
         to: email,
         bcc: "support@quotelinker.com", // Direct BCC to support email
         subject: "Your Life Insurance Quote Request",
