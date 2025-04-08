@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -156,19 +157,18 @@ export const LeadForm = () => {
     setIsSubmitting(true);
     
     try {
-      const emailPromise = fetch('/functions/v1/send-confirmation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          leadId: "pending",
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-        }),
+      console.log("Starting form submission process");
+      
+      // First insert into Life table
+      console.log("Inserting into Life table with data:", {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        age: formData.age,
+        gender: formData.gender,
+        tobacco: formData.tobaccoUse
       });
-
+      
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -183,19 +183,36 @@ export const LeadForm = () => {
         .single();
 
       if (leadError) {
-        console.error("Database error:", leadError);
+        console.error("Supabase database error:", leadError);
         throw new Error(`Database error: ${leadError.message}`);
       }
 
+      console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
-      const emailResponse = await emailPromise;
+      // Send confirmation email
+      console.log("Sending confirmation email to:", formData.email);
+      const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          leadId,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+        }),
+      });
+
       if (!emailResponse.ok) {
         console.error("Email sending failed:", await emailResponse.text());
       } else {
         console.log("Email sent successfully:", await emailResponse.json());
       }
       
+      // Create HubSpot contact
+      console.log("Creating HubSpot contact");
       fetch('/functions/v1/create-hubspot-contact', {
         method: 'POST',
         headers: {
@@ -225,7 +242,7 @@ export const LeadForm = () => {
       
       navigate('/appointment-success');
     } catch (error: any) {
-      console.error("Submission error:", error);
+      console.error("Form submission error:", error);
       toast({
         title: "Submission Failed",
         description: error.message || "Please try again later.",
