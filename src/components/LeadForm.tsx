@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -124,11 +125,11 @@ export const LeadForm = () => {
   };
 
   const sendConfirmationEmail = async (leadId: string, data: FormData): Promise<boolean> => {
-    console.log("Starting email sending process");
+    console.log(`[${new Date().toISOString()}] Starting email sending process`);
     
     try {
       const startTime = Date.now();
-      console.log("Sending confirmation email to:", data.email);
+      console.log(`[${new Date().toISOString()}] Sending confirmation email to:`, data.email);
       
       const emailResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/send-confirmation-email', {
         method: 'POST',
@@ -144,27 +145,27 @@ export const LeadForm = () => {
       });
       
       const endTime = Date.now();
-      console.log(`Email API request completed in ${endTime - startTime}ms`);
+      console.log(`[${new Date().toISOString()}] Email API request completed in ${endTime - startTime}ms`);
 
       let responseData;
       try {
         responseData = await emailResponse.json();
-        console.log("Email API response parsed as JSON:", responseData);
+        console.log(`[${new Date().toISOString()}] Email API response parsed as JSON:`, responseData);
       } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError);
+        console.error(`[${new Date().toISOString()}] Failed to parse response as JSON:`, parseError);
         const textResponse = await emailResponse.text();
-        console.error("Raw response text:", textResponse);
+        console.error(`[${new Date().toISOString()}] Raw response text:`, textResponse);
         responseData = { error: "Invalid response format" };
       }
       
       if (!emailResponse.ok) {
-        console.error("Email sending failed with status:", emailResponse.status, "Response:", responseData);
+        console.error(`[${new Date().toISOString()}] Email sending failed with status:`, emailResponse.status, "Response:", responseData);
         throw new Error(`Failed to send confirmation email: ${
           responseData?.error || responseData?.message || 'Server error'
         }`);
       }
       
-      console.log("Email sent successfully:", responseData);
+      console.log(`[${new Date().toISOString()}] Email sent successfully:`, responseData);
       
       toast({
         title: "Confirmation Email Sent",
@@ -173,7 +174,7 @@ export const LeadForm = () => {
       
       return true;
     } catch (emailError: any) {
-      console.error("Email sending error:", emailError);
+      console.error(`[${new Date().toISOString()}] Email sending error:`, emailError);
       
       toast({
         title: "Email Notification Issue",
@@ -195,7 +196,7 @@ export const LeadForm = () => {
     setSubmitError(null);
     
     try {
-      console.log("Starting form submission process");
+      console.log(`[${new Date().toISOString()}] Starting form submission process`);
       
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
@@ -211,19 +212,19 @@ export const LeadForm = () => {
         .single();
 
       if (leadError) {
-        console.error("Supabase database error:", leadError);
+        console.error(`[${new Date().toISOString()}] Supabase database error:`, leadError);
         throw new Error(`Database error: ${leadError.message}`);
       }
 
-      console.log("Successfully inserted into Life table, got back data:", leadData);
+      console.log(`[${new Date().toISOString()}] Successfully inserted into Life table, got back data:`, leadData);
       const leadId = leadData.id;
       
       // Send confirmation email and continue regardless of email success
       try {
-        console.log("Attempting to send confirmation email");
+        console.log(`[${new Date().toISOString()}] Attempting to send confirmation email`);
         await sendConfirmationEmail(leadId, data);
       } catch (emailError) {
-        console.error("Email sending process error:", emailError);
+        console.error(`[${new Date().toISOString()}] Email sending process error:`, emailError);
         // Continue with form submission even if email fails
       }
       
@@ -267,7 +268,7 @@ export const LeadForm = () => {
       navigate('/appointment-success');
       
     } catch (error: any) {
-      console.error("Form submission error:", error);
+      console.error(`[${new Date().toISOString()}] Form submission error:`, error);
       setSubmitError(error.message || "An unexpected error occurred. Please try again.");
       toast({
         title: "Submission Failed",

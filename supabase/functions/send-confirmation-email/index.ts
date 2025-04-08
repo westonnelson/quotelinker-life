@@ -18,8 +18,8 @@ serve(async (req) => {
   try {
     const { leadId, firstName, lastName, email } = await req.json();
     
-    console.log("Starting email sending process for:", email);
-    console.log("Using Resend API key:", resendApiKey ? "API key is set" : "API key is missing");
+    console.log(`[${new Date().toISOString()}] Starting email sending process for: ${email}`);
+    console.log(`[${new Date().toISOString()}] Resend API key status: ${resendApiKey ? "Available" : "Missing"}`);
     
     if (!email) {
       throw new Error("Email is required");
@@ -29,7 +29,7 @@ serve(async (req) => {
       throw new Error("Resend API key is not configured");
     }
 
-    console.log("Preparing to send confirmation email to:", email);
+    console.log(`[${new Date().toISOString()}] Preparing to send confirmation email to: ${email}`);
     
     // Send confirmation email using Resend
     const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -39,7 +39,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`
       },
       body: JSON.stringify({
-        from: "QuoteLinker <hello@resend.dev>",
+        from: "QuoteLinker <notifications@quotelinker.com>",
         to: email,
         subject: "Your Life Insurance Quote Request",
         html: `
@@ -54,7 +54,7 @@ serve(async (req) => {
               <p style="margin: 0; font-weight: bold;">Reference Number: ${leadId}</p>
               <p style="margin: 5px 0 0;">Please keep this for your records.</p>
             </div>
-            <p>If you have any questions in the meantime, please contact us at hello@resend.dev</p>
+            <p>If you have any questions in the meantime, please contact us at support@quotelinker.com</p>
             <p>Want to speak with an agent right away? <a href="https://quotelinker.com/appointment-success" style="color: #0056b3;">Schedule a call</a> with one of our insurance experts.</p>
             <p>Best regards,<br>The QuoteLinker Team</p>
           </div>
@@ -62,7 +62,7 @@ serve(async (req) => {
       })
     });
     
-    console.log("Email API response status:", emailResponse.status);
+    console.log(`[${new Date().toISOString()}] Email API response status: ${emailResponse.status}`);
     
     let responseText;
     let responseData;
@@ -71,24 +71,25 @@ serve(async (req) => {
       // Try to parse as JSON first
       responseData = await emailResponse.json();
       responseText = JSON.stringify(responseData);
+      console.log(`[${new Date().toISOString()}] Email API response parsed as JSON:`, responseText);
     } catch (parseError) {
       // If that fails, get as text
       try {
         responseText = await emailResponse.text();
+        console.log(`[${new Date().toISOString()}] Email API raw response text:`, responseText);
       } catch (textError) {
         responseText = "Could not read response";
+        console.error(`[${new Date().toISOString()}] Could not read email API response:`, textError);
       }
     }
     
-    // Detailed logging regardless of success or failure
-    console.log("Email API complete response:", responseText);
-    
+    // Check if the response was successful
     if (!emailResponse.ok) {
-      console.error("Email API error response:", responseText);
+      console.error(`[${new Date().toISOString()}] Email API error (${emailResponse.status}):`, responseText);
       throw new Error(`Email API error (${emailResponse.status}): ${responseText}`);
     }
 
-    console.log("Email sent successfully, response:", responseText);
+    console.log(`[${new Date().toISOString()}] Email sent successfully to ${email}, message ID: ${responseData?.id || "unknown"}`);
 
     return new Response(
       JSON.stringify({ 
@@ -103,7 +104,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Email sending error:", error);
+    console.error(`[${new Date().toISOString()}] Email sending error:`, error);
     return new Response(
       JSON.stringify({ error: error.message || "Unknown error occurred" }),
       {
