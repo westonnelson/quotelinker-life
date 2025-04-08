@@ -19,7 +19,6 @@ serve(async (req) => {
     const { leadId, firstName, lastName, email } = await req.json();
     
     console.log("Sending confirmation email to:", email);
-    console.log("Using Resend API key:", resendApiKey ? "Key exists" : "No key found");
     
     if (!email) {
       throw new Error("Email is required");
@@ -61,11 +60,19 @@ serve(async (req) => {
       })
     });
 
-    const emailData = await emailResponse.json();
+    // Properly handle JSON parsing errors
+    let emailData;
+    try {
+      emailData = await emailResponse.json();
+    } catch (parseError) {
+      console.error("Failed to parse email API response:", parseError);
+      // Get the response text to debug
+      const responseText = await emailResponse.text();
+      console.log("Response text:", responseText);
+      throw new Error(`Email API response parsing error: ${parseError.message}. Response: ${responseText.substring(0, 200)}`);
+    }
     
     console.log("Email API response status:", emailResponse.status);
-    console.log("Email API response headers:", Object.fromEntries(emailResponse.headers.entries()));
-    console.log("Email API response body:", emailData);
     
     if (!emailResponse.ok) {
       throw new Error(`Email API error: ${JSON.stringify(emailData)}`);
@@ -83,7 +90,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Email sending error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
       {
         status: 500,
         headers: {

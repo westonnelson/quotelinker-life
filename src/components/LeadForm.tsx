@@ -12,18 +12,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-type FormData = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  age: string;
-  gender: string;
-  tobaccoUse: string;
-  coverageAmount: string;
-  preferredContact: string;
-  zipCode: string;
-};
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+// Form validation schema
+const formSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  age: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 18 && num <= 85;
+  }, "Age must be between 18 and 85"),
+  gender: z.string().min(1, "Gender is required"),
+  tobaccoUse: z.string(),
+  coverageAmount: z.string().min(1, "Coverage amount is required"),
+  preferredContact: z.string(),
+  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const initialFormData: FormData = {
   firstName: '',
@@ -53,21 +71,18 @@ const formSteps = [
 ];
 
 export const LeadForm = () => {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // Initialize form with React Hook Form
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialFormData,
+    mode: "onTouched",
+  });
 
   const nextStep = () => {
     if (currentStep < formSteps.length - 1) {
@@ -81,78 +96,26 @@ export const LeadForm = () => {
     }
   };
 
-  const validateCurrentStep = (): boolean => {
+  const validateCurrentStep = async (): Promise<boolean> => {
+    let isValid = false;
+    
     if (currentStep === 0) {
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill in all required fields.",
-          variant: "destructive"
-        });
-        return false;
-      }
-      if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-        toast({
-          title: "Invalid Email",
-          description: "Please enter a valid email address.",
-          variant: "destructive"
-        });
-        return false;
-      }
-      if (!/^[0-9]{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-        toast({
-          title: "Invalid Phone Number",
-          description: "Please enter a valid 10-digit phone number.",
-          variant: "destructive"
-        });
-        return false;
-      }
+      isValid = await form.trigger(['firstName', 'lastName', 'email', 'phone']);
     } else if (currentStep === 1) {
-      if (!formData.age || !formData.gender || !formData.coverageAmount) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill in all required fields.",
-          variant: "destructive"
-        });
-        return false;
-      }
-      const age = parseInt(formData.age);
-      if (isNaN(age) || age < 18 || age > 85) {
-        toast({
-          title: "Invalid Age",
-          description: "Please enter an age between 18 and 85.",
-          variant: "destructive"
-        });
-        return false;
-      }
+      isValid = await form.trigger(['age', 'gender', 'coverageAmount']);
     } else if (currentStep === 2) {
-      if (!formData.zipCode) {
-        toast({
-          title: "Missing Information",
-          description: "Please enter your ZIP code.",
-          variant: "destructive"
-        });
-        return false;
-      }
-      if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode)) {
-        toast({
-          title: "Invalid ZIP Code",
-          description: "Please enter a valid ZIP code.",
-          variant: "destructive"
-        });
-        return false;
-      }
+      isValid = await form.trigger(['zipCode']);
     }
-    return true;
+    
+    return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateCurrentStep()) return;
-    
+  const onSubmit = async (data: FormData) => {
     if (currentStep < formSteps.length - 1) {
-      nextStep();
+      const isValid = await validateCurrentStep();
+      if (isValid) {
+        nextStep();
+      }
       return;
     }
     
@@ -164,23 +127,23 @@ export const LeadForm = () => {
       
       // First insert into Life table
       console.log("Inserting into Life table with data:", {
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        phone: formData.phone,
-        age: formData.age,
-        gender: formData.gender,
-        tobacco: formData.tobaccoUse
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        phone: data.phone,
+        age: data.age,
+        gender: data.gender,
+        tobacco: data.tobaccoUse
       });
       
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
-          age: formData.age,
-          gender: formData.gender,
-          tobacco: formData.tobaccoUse
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          phone: data.phone,
+          age: data.age,
+          gender: data.gender,
+          tobacco: data.tobaccoUse
         })
         .select()
         .single();
@@ -194,55 +157,71 @@ export const LeadForm = () => {
       const leadId = leadData.id;
       
       // Send confirmation email
-      console.log("Sending confirmation email to:", formData.email);
-      const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          leadId,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-        }),
-      });
+      console.log("Sending confirmation email to:", data.email);
+      try {
+        const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            leadId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+          }),
+        });
 
-      const emailResult = await emailResponse.json();
-      
-      if (!emailResponse.ok) {
-        console.error("Email sending failed:", emailResult);
-        throw new Error(`Failed to send confirmation email: ${emailResult.error || 'Unknown error'}`);
-      } else {
+        // Check if response is OK before trying to parse JSON
+        if (!emailResponse.ok) {
+          const errorText = await emailResponse.text();
+          console.error("Email sending failed with status:", emailResponse.status, "Response:", errorText);
+          throw new Error(`Failed to send confirmation email: ${errorText || 'Server error'}`);
+        }
+        
+        const emailResult = await emailResponse.json();
         console.log("Email sent successfully:", emailResult);
+      } catch (emailError) {
+        console.error("Email sending error:", emailError);
+        // Continue with the form submission even if email fails
+        toast({
+          title: "Email Notification Issue",
+          description: "We couldn't send you a confirmation email, but your quote request was saved.",
+          variant: "destructive"
+        });
       }
       
       // Create HubSpot contact
-      console.log("Creating HubSpot contact");
-      const hubspotResponse = await fetch('/functions/v1/create-hubspot-contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          leadId,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          age: formData.age,
-          gender: formData.gender,
-          tobaccoUse: formData.tobaccoUse,
-          coverageAmount: formData.coverageAmount,
-          preferredContact: formData.preferredContact,
-          zipCode: formData.zipCode
-        }),
-      });
-      
-      if (!hubspotResponse.ok) {
-        const hubspotError = await hubspotResponse.json();
+      try {
+        console.log("Creating HubSpot contact");
+        const hubspotResponse = await fetch('/functions/v1/create-hubspot-contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            leadId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            age: data.age,
+            gender: data.gender,
+            tobaccoUse: data.tobaccoUse,
+            coverageAmount: data.coverageAmount,
+            preferredContact: data.preferredContact,
+            zipCode: data.zipCode
+          }),
+        });
+        
+        if (!hubspotResponse.ok) {
+          const hubspotError = await hubspotResponse.text();
+          console.error("HubSpot integration error:", hubspotError);
+          // We don't want to block the user flow if HubSpot fails, just log it
+        }
+      } catch (hubspotError) {
         console.error("HubSpot integration error:", hubspotError);
-        // We don't want to block the user flow if HubSpot fails, just log it
+        // Don't block submission for HubSpot errors
       }
       
       toast({
@@ -270,158 +249,236 @@ export const LeadForm = () => {
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name*</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  placeholder="Enter your first name"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name*</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  placeholder="Enter your last name"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address*</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="your@email.com"
-                value={formData.email}
-                onChange={handleInputChange}
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel htmlFor="firstName">First Name*</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="firstName"
+                        placeholder="Enter your first name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel htmlFor="lastName">Last Name*</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="lastName"
+                        placeholder="Enter your last name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number*</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel htmlFor="email">Email Address*</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel htmlFor="phone">Phone Number*</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         );
       case 1:
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="age">Age*</Label>
-                <Input
-                  id="age"
-                  name="age"
-                  type="number"
-                  placeholder="Enter your age"
-                  min="18"
-                  max="85"
-                  value={formData.age}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender*</Label>
-                <RadioGroup
-                  value={formData.gender}
-                  onValueChange={(value) => handleSelectChange('gender', value)}
-                  className="flex gap-4 pt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="male" id="male" />
-                    <Label htmlFor="male">Male</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="female" id="female" />
-                    <Label htmlFor="female">Female</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel htmlFor="age">Age*</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="age"
+                        type="number"
+                        placeholder="Enter your age"
+                        min="18"
+                        max="85"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>Gender*</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex gap-4 pt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="male" id="male" />
+                          <Label htmlFor="male">Male</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="female" id="female" />
+                          <Label htmlFor="female">Female</Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="tobaccoUse">Tobacco Use in the Last 12 Months?</Label>
-              <RadioGroup
-                value={formData.tobaccoUse}
-                onValueChange={(value) => handleSelectChange('tobaccoUse', value)}
-                className="flex gap-4 pt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="tobacco-yes" />
-                  <Label htmlFor="tobacco-yes">Yes</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="tobacco-no" />
-                  <Label htmlFor="tobacco-no">No</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="coverageAmount">Coverage Amount*</Label>
-              <Select 
-                value={formData.coverageAmount}
-                onValueChange={(value) => handleSelectChange('coverageAmount', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select coverage amount" />
-                </SelectTrigger>
-                <SelectContent>
-                  {coverageOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="tobaccoUse"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Tobacco Use in the Last 12 Months?</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex gap-4 pt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="tobacco-yes" />
+                        <Label htmlFor="tobacco-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="tobacco-no" />
+                        <Label htmlFor="tobacco-no">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="coverageAmount"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Coverage Amount*</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select coverage amount" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {coverageOptions.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         );
       case 2:
         return (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="preferredContact">Preferred Contact Method</Label>
-              <RadioGroup
-                value={formData.preferredContact}
-                onValueChange={(value) => handleSelectChange('preferredContact', value)}
-                className="flex flex-col gap-2 pt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="email" id="contact-email" />
-                  <Label htmlFor="contact-email">Email</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="phone" id="contact-phone" />
-                  <Label htmlFor="contact-phone">Phone</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="both" id="contact-both" />
-                  <Label htmlFor="contact-both">Both</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="zipCode">ZIP Code*</Label>
-              <Input
-                id="zipCode"
-                name="zipCode"
-                placeholder="Enter your ZIP code"
-                value={formData.zipCode}
-                onChange={handleInputChange}
-                maxLength={10}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="preferredContact"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel>Preferred Contact Method</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col gap-2 pt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="email" id="contact-email" />
+                        <Label htmlFor="contact-email">Email</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="phone" id="contact-phone" />
+                        <Label htmlFor="contact-phone">Phone</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="both" id="contact-both" />
+                        <Label htmlFor="contact-both">Both</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel htmlFor="zipCode">ZIP Code*</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="zipCode"
+                      placeholder="Enter your ZIP code"
+                      maxLength={10}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="flex items-center gap-2 text-sm text-gray-500 pt-4">
               <Lock className="h-4 w-4" />
               <p>Your information is secure and will not be shared with third parties.</p>
@@ -488,45 +545,47 @@ export const LeadForm = () => {
               ))}
             </div>
             
-            <form onSubmit={handleSubmit}>
-              {renderStep()}
-              
-              <div className="flex justify-between mt-6 sm:mt-8">
-                {currentStep > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={isSubmitting}
-                    className="text-sm h-9 sm:h-10"
-                  >
-                    Back
-                  </Button>
-                )}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                {renderStep()}
                 
-                <div className={currentStep > 0 ? "ml-auto" : "w-full"}>
-                  <Button
-                    type="submit"
-                    className="bg-primary hover:bg-primary-hover text-sm h-9 sm:h-10 w-full sm:w-auto"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Processing...
-                      </div>
-                    ) : currentStep < formSteps.length - 1 ? (
-                      <div className="flex items-center gap-1">
-                        Next Step 
-                        <ChevronRight className="h-4 w-4" />
-                      </div>
-                    ) : (
-                      "Get My Quote"
-                    )}
-                  </Button>
+                <div className="flex justify-between mt-6 sm:mt-8">
+                  {currentStep > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={prevStep}
+                      disabled={isSubmitting}
+                      className="text-sm h-9 sm:h-10"
+                    >
+                      Back
+                    </Button>
+                  )}
+                  
+                  <div className={currentStep > 0 ? "ml-auto" : "w-full"}>
+                    <Button
+                      type="submit"
+                      className="bg-primary hover:bg-primary-hover text-sm h-9 sm:h-10 w-full sm:w-auto"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Processing...
+                        </div>
+                      ) : currentStep < formSteps.length - 1 ? (
+                        <div className="flex items-center gap-1">
+                          Next Step 
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        "Get My Quote"
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            </Form>
             
             <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
               <div className="flex flex-col items-center justify-center bg-green-100 text-green-600 p-2 rounded-full">

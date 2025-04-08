@@ -37,6 +37,20 @@ serve(async (req) => {
       throw new Error("Lead ID is required");
     }
 
+    // Skip HubSpot if API key is not configured
+    if (!hubspotApiKey) {
+      console.log("HubSpot API key not configured, skipping HubSpot integration");
+      return new Response(
+        JSON.stringify({ success: true, message: "HubSpot integration skipped" }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
     // Initialize Supabase client with service role key for admin actions
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
@@ -66,7 +80,17 @@ serve(async (req) => {
       })
     });
 
-    const hubspotData = await hubspotResponse.json();
+    // Properly handle JSON parsing errors
+    let hubspotData;
+    try {
+      hubspotData = await hubspotResponse.json();
+    } catch (parseError) {
+      console.error("Failed to parse HubSpot API response:", parseError);
+      // Get the response text to debug
+      const responseText = await hubspotResponse.text();
+      console.log("Response text:", responseText);
+      throw new Error(`HubSpot API response parsing error: ${parseError.message}. Response: ${responseText.substring(0, 200)}`);
+    }
     
     if (!hubspotResponse.ok) {
       throw new Error(`HubSpot API error: ${JSON.stringify(hubspotData)}`);
@@ -82,8 +106,9 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("HubSpot integration error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
       {
         status: 500,
         headers: {
