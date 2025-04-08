@@ -39,9 +39,8 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`
       },
       body: JSON.stringify({
-        from: "QuoteLinker <support@quotelinker.com>",
-        to: email, // Sending to a single recipient
-        bcc: "support@quotelinker.com", // Single BCC recipient
+        from: "QuoteLinker <hello@resend.dev>",
+        to: email,
         subject: "Your Life Insurance Quote Request",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -55,7 +54,7 @@ serve(async (req) => {
               <p style="margin: 0; font-weight: bold;">Reference Number: ${leadId}</p>
               <p style="margin: 5px 0 0;">Please keep this for your records.</p>
             </div>
-            <p>If you have any questions in the meantime, please contact us at support@quotelinker.com</p>
+            <p>If you have any questions in the meantime, please contact us at hello@resend.dev</p>
             <p>Want to speak with an agent right away? <a href="https://quotelinker.com/appointment-success" style="color: #0056b3;">Schedule a call</a> with one of our insurance experts.</p>
             <p>Best regards,<br>The QuoteLinker Team</p>
           </div>
