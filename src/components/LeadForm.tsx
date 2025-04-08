@@ -149,12 +149,13 @@ export const LeadForm = () => {
       let responseData;
       try {
         responseData = await emailResponse.json();
+        console.log("Email API response parsed as JSON:", responseData);
       } catch (parseError) {
         console.error("Failed to parse response as JSON:", parseError);
+        const textResponse = await emailResponse.text();
+        console.error("Raw response text:", textResponse);
         responseData = { error: "Invalid response format" };
       }
-      
-      console.log("Full email API response:", responseData);
       
       if (!emailResponse.ok) {
         console.error("Email sending failed with status:", emailResponse.status, "Response:", responseData);
@@ -217,12 +218,13 @@ export const LeadForm = () => {
       console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
+      // Send confirmation email and continue regardless of email success
       try {
         console.log("Attempting to send confirmation email");
-        const emailResult = await sendConfirmationEmail(leadId, data);
-        console.log("Email sending process completed:", emailResult ? "Success" : "Failed but continuing");
+        await sendConfirmationEmail(leadId, data);
       } catch (emailError) {
-        console.error("Completely failed email sending process:", emailError);
+        console.error("Email sending process error:", emailError);
+        // Continue with form submission even if email fails
       }
       
       try {
@@ -524,6 +526,7 @@ export const LeadForm = () => {
     }
   };
 
+  
   return (
     <section id="lead-form" className="py-8 sm:py-12">
       <div className="container-custom max-w-3xl px-4 sm:px-6">
