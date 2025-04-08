@@ -122,6 +122,55 @@ export const LeadForm = () => {
     }
   };
 
+  const sendConfirmationEmail = async (leadId: string, data: FormData) => {
+    console.log("Starting email sending process");
+    
+    try {
+      const startTime = Date.now();
+      console.log("Sending confirmation email to:", data.email);
+      
+      const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          leadId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+        }),
+      });
+      
+      const endTime = Date.now();
+      console.log(`Email API request completed in ${endTime - startTime}ms`);
+
+      if (!emailResponse.ok) {
+        const errorText = await emailResponse.text();
+        console.error("Email sending failed with status:", emailResponse.status, "Response:", errorText);
+        throw new Error(`Failed to send confirmation email: ${errorText || 'Server error'}`);
+      }
+      
+      const emailResult = await emailResponse.json();
+      console.log("Email sent successfully:", emailResult);
+      
+      toast({
+        title: "Confirmation Email Sent",
+        description: "Check your inbox for details about your quote request.",
+      });
+      
+      return true;
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
+      toast({
+        title: "Email Notification Issue",
+        description: "We couldn't send you a confirmation email, but your quote request was saved.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     if (currentStep < formSteps.length - 1) {
       handleNextStep();
@@ -155,42 +204,8 @@ export const LeadForm = () => {
       console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
-      try {
-        console.log("Sending confirmation email to:", data.email);
-        const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            leadId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-          }),
-        });
-
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text();
-          console.error("Email sending failed with status:", emailResponse.status, "Response:", errorText);
-          throw new Error(`Failed to send confirmation email: ${errorText || 'Server error'}`);
-        }
-        
-        const emailResult = await emailResponse.json();
-        console.log("Email sent successfully:", emailResult);
-        
-        toast({
-          title: "Confirmation Email Sent",
-          description: "Check your inbox for details about your quote request.",
-        });
-      } catch (emailError) {
-        console.error("Email sending error:", emailError);
-        toast({
-          title: "Email Notification Issue",
-          description: "We couldn't send you a confirmation email, but your quote request was saved.",
-          variant: "destructive"
-        });
-      }
+      const emailSent = await sendConfirmationEmail(leadId, data);
+      console.log("Email sending completed, result:", emailSent);
       
       try {
         console.log("Creating HubSpot contact");
@@ -217,6 +232,8 @@ export const LeadForm = () => {
         if (!hubspotResponse.ok) {
           const hubspotError = await hubspotResponse.text();
           console.error("HubSpot integration error:", hubspotError);
+        } else {
+          console.log("HubSpot contact created successfully");
         }
       } catch (hubspotError) {
         console.error("HubSpot integration error:", hubspotError);
