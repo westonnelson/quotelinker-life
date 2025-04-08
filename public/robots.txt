@@ -1,3 +1,12 @@
+
+# Allow all user agents
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://quotelinker.com/sitemap.xml
+
+# Specific rules for bots
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +19,5 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+# Block specific paths that shouldn't be indexed
+Disallow: /*?* 

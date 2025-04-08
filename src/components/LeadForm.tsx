@@ -434,22 +434,22 @@ export const LeadForm = () => {
   };
 
   return (
-    <section id="lead-form" className="py-12">
-      <div className="container-custom max-w-3xl">
+    <section id="lead-form" className="py-8 sm:py-12">
+      <div className="container-custom max-w-3xl px-4 sm:px-6">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-          <div className="bg-primary px-6 py-6 text-white">
-            <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="bg-primary px-4 sm:px-6 py-6 text-white">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-2">
               <img 
                 src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
                 alt="QuoteLinker Logo" 
-                className="h-10 w-auto invert" 
+                className="h-8 w-auto invert" 
               />
-              <h2 className="text-2xl font-bold">Get Your Free Life Insurance Quote</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-center">Get Your Free Life Insurance Quote</h2>
             </div>
-            <p className="text-primary-foreground/80 text-center">Complete the form below to receive your personalized quote</p>
+            <p className="text-primary-foreground/80 text-center text-sm sm:text-base">Complete the form below to receive your personalized quote</p>
           </div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {submitError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertTitle>Error</AlertTitle>
@@ -457,7 +457,7 @@ export const LeadForm = () => {
               </Alert>
             )}
             
-            <div className="flex justify-between mb-8">
+            <div className="flex justify-between mb-6 sm:mb-8">
               {formSteps.map((step, index) => (
                 <div 
                   key={index}
@@ -466,7 +466,7 @@ export const LeadForm = () => {
                   }`}
                 >
                   <div 
-                    className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                    className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium ${
                       index < currentStep
                         ? "bg-green-100 text-green-600"
                         : index === currentStep
@@ -475,14 +475,14 @@ export const LeadForm = () => {
                     }`}
                   >
                     {index < currentStep ? (
-                      <Check className="h-5 w-5" />
+                      <Check className="h-4 w-4" />
                     ) : (
                       index + 1
                     )}
                   </div>
-                  <div className="mt-2 text-center">
-                    <p className="text-sm font-medium">{step.title}</p>
-                    <p className="text-xs text-gray-500 hidden md:block">{step.description}</p>
+                  <div className="mt-1 sm:mt-2 text-center">
+                    <p className="text-xs sm:text-sm font-medium">{step.title}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 hidden md:block">{step.description}</p>
                   </div>
                 </div>
               ))}
@@ -491,22 +491,23 @@ export const LeadForm = () => {
             <form onSubmit={handleSubmit}>
               {renderStep()}
               
-              <div className="flex justify-between mt-8">
+              <div className="flex justify-between mt-6 sm:mt-8">
                 {currentStep > 0 && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={prevStep}
                     disabled={isSubmitting}
+                    className="text-sm h-9 sm:h-10"
                   >
                     Back
                   </Button>
                 )}
                 
-                <div className="ml-auto">
+                <div className={currentStep > 0 ? "ml-auto" : "w-full"}>
                   <Button
                     type="submit"
-                    className="bg-primary hover:bg-primary-hover"
+                    className="bg-primary hover:bg-primary-hover text-sm h-9 sm:h-10 w-full sm:w-auto"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
@@ -527,11 +528,11 @@ export const LeadForm = () => {
               </div>
             </form>
             
-            <div className="mt-6 pt-6 border-t border-gray-200 flex items-center gap-4">
+            <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
               <div className="flex flex-col items-center justify-center bg-green-100 text-green-600 p-2 rounded-full">
-                <Calendar className="h-6 w-6" />
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <h3 className="font-medium">Want to speak with an agent?</h3>
                 <p className="text-sm text-gray-500">
                   <Link 
