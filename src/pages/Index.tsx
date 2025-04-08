@@ -13,11 +13,11 @@ const Index = () => {
         <div className="container-custom flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img 
-              src="/quotelinker-logo.png" 
+              src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
               alt="QuoteLinker Logo" 
               className="h-8 w-auto"
             />
-            <span className="font-bold text-lg">QuoteLinker</span>
+            <span className="font-bold text-lg" style={{ color: '#00e1ff' }}>QuoteLinker</span>
           </div>
           
           <div className="hidden md:flex items-center gap-6">
@@ -63,11 +63,11 @@ const Index = () => {
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2 mb-4">
                 <img 
-                  src="/quotelinker-logo.png" 
+                  src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
                   alt="QuoteLinker Logo" 
-                  className="h-8 w-auto invert" 
+                  className="h-8 w-auto" 
                 />
-                <span className="font-bold text-lg">QuoteLinker</span>
+                <span className="font-bold text-lg" style={{ color: '#00e1ff' }}>QuoteLinker</span>
               </div>
               <p className="text-gray-400 text-sm mb-4">
                 Helping families secure their financial future with reliable, affordable life insurance coverage.

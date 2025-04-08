@@ -59,6 +59,11 @@ export default {
 					hover: '#218838',
 					foreground: '#ffffff'
 				},
+				quotelinker: {
+                    DEFAULT: '#00e1ff',
+                    hover: '#00c4dd',
+                    foreground: '#ffffff'
+                },
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

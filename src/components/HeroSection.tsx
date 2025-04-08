@@ -9,7 +9,7 @@ export const HeroSection = () => {
           <div className="space-y-6 animate-fade-in">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-primary px-4 py-1.5 rounded-full">
               <img 
-                src="/lovable-uploads/5d933709-1084-4ee3-ac2e-9e3866cf7eeb.png" 
+                src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
                 alt="QuoteLinker Logo" 
                 className="h-4 w-auto" 
               />
@@ -17,7 +17,7 @@ export const HeroSection = () => {
             </div>
             
             <h1 className="heading-1">
-              Get The Life Insurance <span className="text-primary">Coverage Your Family Deserves</span>
+              Get The Life Insurance <span style={{ color: '#00e1ff' }}>Coverage Your Family Deserves</span>
             </h1>
             
             <p className="paragraph text-gray-600 max-w-lg">

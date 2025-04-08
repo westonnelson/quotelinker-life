@@ -42,11 +42,11 @@ const AppointmentSuccess = () => {
     <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
       <div className="flex items-center justify-center gap-2 my-6">
         <img 
-          src="/quotelinker-logo.png" 
+          src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
           alt="QuoteLinker Logo" 
           className="h-12 w-auto" 
         />
-        <span className="font-bold text-xl">QuoteLinker</span>
+        <span className="font-bold text-xl" style={{ color: '#00e1ff' }}>QuoteLinker</span>
       </div>
       
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -81,11 +81,11 @@ const AppointmentSuccess = () => {
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-center gap-2 mb-4">
           <img 
-            src="/quotelinker-logo.png" 
+            src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
             alt="QuoteLinker Logo" 
             className="h-8 w-auto" 
           />
-          <h2 className="text-xl font-bold">Schedule Your Call</h2>
+          <h2 className="text-xl font-bold" style={{ color: '#00e1ff' }}>Schedule Your Call</h2>
         </div>
         
         <div id="calendly-inline-widget" className="min-w-[320px] h-[700px]"></div>
