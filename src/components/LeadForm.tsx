@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -117,19 +118,20 @@ export const LeadForm = () => {
     const isValid = await validateCurrentStep();
     if (isValid) {
       nextStep();
+      setSubmitError(null);  // Clear any previous errors when moving to next step
     } else {
       console.log("Form validation failed for current step:", currentStep);
     }
   };
 
-  const sendConfirmationEmail = async (leadId: string, data: FormData) => {
+  const sendConfirmationEmail = async (leadId: string, data: FormData): Promise<boolean> => {
     console.log("Starting email sending process");
     
     try {
       const startTime = Date.now();
       console.log("Sending confirmation email to:", data.email);
       
-      const emailResponse = await fetch('/functions/v1/send-confirmation-email', {
+      const emailResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/send-confirmation-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,6 +185,7 @@ export const LeadForm = () => {
     try {
       console.log("Starting form submission process");
       
+      // First, store the lead in the database
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -204,12 +207,14 @@ export const LeadForm = () => {
       console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
+      // Now try to send the email
       const emailSent = await sendConfirmationEmail(leadId, data);
       console.log("Email sending completed, result:", emailSent);
       
+      // Try to create HubSpot contact if possible, but don't block the process
       try {
         console.log("Creating HubSpot contact");
-        const hubspotResponse = await fetch('/functions/v1/create-hubspot-contact', {
+        const hubspotResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/create-hubspot-contact', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -237,14 +242,18 @@ export const LeadForm = () => {
         }
       } catch (hubspotError) {
         console.error("HubSpot integration error:", hubspotError);
+        // Continue with the process even if HubSpot fails
       }
       
+      // Show success message and navigate
       toast({
         title: "Form Submitted Successfully",
         description: "We'll contact you shortly with your quote!",
       });
       
+      // Redirect to success page
       navigate('/appointment-success');
+      
     } catch (error: any) {
       console.error("Form submission error:", error);
       setSubmitError(error.message || "An unexpected error occurred. Please try again.");
@@ -258,6 +267,7 @@ export const LeadForm = () => {
     }
   };
 
+  // Render form steps
   const renderStep = () => {
     switch (currentStep) {
       case 0:

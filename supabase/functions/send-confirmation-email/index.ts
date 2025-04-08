@@ -19,6 +19,7 @@ serve(async (req) => {
     const { leadId, firstName, lastName, email } = await req.json();
     
     console.log("Starting email sending process for:", email);
+    console.log("Using Resend API key:", resendApiKey ? "API key is set" : "API key is missing");
     
     if (!email) {
       throw new Error("Email is required");
@@ -28,7 +29,7 @@ serve(async (req) => {
       throw new Error("Resend API key is not configured");
     }
 
-    console.log("Sending confirmation email using Resend API");
+    console.log("Preparing to send confirmation email to:", email);
     
     // Send confirmation email using Resend
     const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -38,7 +39,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`
       },
       body: JSON.stringify({
-        from: "support@quotelinker.com",
+        from: "QuoteLinker <support@quotelinker.com>",
         to: email,
         bcc: "support@quotelinker.com", // Direct BCC to support email
         subject: "Your Life Insurance Quote Request",
