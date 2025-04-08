@@ -1,83 +1,27 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { Calendar, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 
-const formSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  age: z.string().refine((val) => {
-    const num = parseInt(val);
-    return !isNaN(num) && num >= 18 && num <= 85;
-  }, "Age must be between 18 and 85"),
-  gender: z.string().min(1, "Gender is required"),
-  tobaccoUse: z.string(),
-  coverageAmount: z.string().min(1, "Coverage amount is required"),
-  bestTimeToContact: z.string(),
-  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-const initialFormData: FormData = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  age: '',
-  gender: '',
-  tobaccoUse: 'no',
-  coverageAmount: '$100,000',
-  bestTimeToContact: 'morning',
-  zipCode: '',
-};
-
-const coverageOptions = [
-  '$50,000',
-  '$100,000',
-  '$250,000',
-  '$500,000',
-  '$1,000,000',
-];
-
-const formSteps = [
-  { title: 'Basic Info', description: 'Tell us about yourself' },
-  { title: 'Coverage Details', description: 'Customize your coverage' },
-  { title: 'Contact Preferences', description: 'How should we reach you?' },
-];
+// Custom imports
+import { leadFormSchema, initialFormData, formSteps } from '@/utils/formSchemas';
+import { useLeadFormSubmission } from '@/hooks/useLeadFormSubmission';
+import FormStepNavigation from '@/components/forms/FormStepNavigation';
+import BasicInfoStep from '@/components/forms/BasicInfoStep';
+import CoverageDetailsStep from '@/components/forms/CoverageDetailsStep';
+import ContactPreferencesStep from '@/components/forms/ContactPreferencesStep';
 
 export const LeadForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const { isSubmitting, submitError, submitForm, setSubmitError } = useLeadFormSubmission();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
+    resolver: zodResolver(leadFormSchema),
     defaultValues: initialFormData,
     mode: "onTouched",
   });
@@ -95,7 +39,7 @@ export const LeadForm = () => {
   };
 
   const validateCurrentStep = async (): Promise<boolean> => {
-    let fieldsToValidate: (keyof FormData)[] = [];
+    let fieldsToValidate: (keyof typeof initialFormData)[] = [];
     
     if (currentStep === 0) {
       fieldsToValidate = ['firstName', 'lastName', 'email', 'phone'];
@@ -124,423 +68,28 @@ export const LeadForm = () => {
     }
   };
 
-  const sendConfirmationEmail = async (leadId: string, data: FormData): Promise<boolean> => {
-    console.log(`[${new Date().toISOString()}] Starting email sending process`);
-    
-    try {
-      const startTime = Date.now();
-      console.log(`[${new Date().toISOString()}] Sending confirmation email to:`, data.email);
-      
-      const emailResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/send-confirmation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          leadId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-        }),
-      });
-      
-      const endTime = Date.now();
-      console.log(`[${new Date().toISOString()}] Email API request completed in ${endTime - startTime}ms`);
-
-      // Always try to get the response text first for better debugging
-      const responseText = await emailResponse.text();
-      console.log(`[${new Date().toISOString()}] Raw email API response:`, responseText);
-      
-      let responseData;
-      try {
-        // Only parse as JSON if it looks like JSON
-        if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
-          responseData = JSON.parse(responseText);
-          console.log(`[${new Date().toISOString()}] Email API response parsed as JSON:`, responseData);
-        } else {
-          console.log(`[${new Date().toISOString()}] Response is not JSON, using as is`);
-          responseData = { message: responseText };
-        }
-      } catch (parseError) {
-        console.error(`[${new Date().toISOString()}] Failed to parse response as JSON:`, parseError);
-        responseData = { error: "Invalid response format", text: responseText };
-      }
-      
-      if (!emailResponse.ok) {
-        console.error(`[${new Date().toISOString()}] Email sending failed with status:`, emailResponse.status, "Response:", responseData);
-        throw new Error(`Failed to send confirmation email: ${
-          responseData?.error || responseData?.message || responseData?.text || 'Server error'
-        }`);
-      }
-      
-      console.log(`[${new Date().toISOString()}] Email sent successfully:`, responseData);
-      
-      toast({
-        title: "Confirmation Email Sent",
-        description: "Check your inbox for details about your quote request.",
-      });
-      
-      return true;
-    } catch (emailError: any) {
-      console.error(`[${new Date().toISOString()}] Email sending error:`, emailError);
-      
-      toast({
-        title: "Email Notification Issue",
-        description: "We couldn't send you a confirmation email, but your quote request was saved. Our team will still contact you.",
-        variant: "destructive"
-      });
-      
-      return false;
-    }
-  };
-
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: typeof initialFormData) => {
     if (currentStep < formSteps.length - 1) {
       handleNextStep();
       return;
     }
     
-    setIsSubmitting(true);
-    setSubmitError(null);
-    
-    try {
-      console.log(`[${new Date().toISOString()}] Starting form submission process`);
-      console.log(`[${new Date().toISOString()}] Form data:`, data);
-      
-      // First, save the lead to the database
-      const { data: leadData, error: leadError } = await supabase
-        .from('Life')
-        .insert({
-          name: `${data.firstName} ${data.lastName}`,
-          email: data.email,
-          phone: data.phone,
-          age: data.age,
-          gender: data.gender,
-          tobacco: data.tobaccoUse
-        })
-        .select()
-        .single();
-
-      if (leadError) {
-        console.error(`[${new Date().toISOString()}] Supabase database error:`, leadError);
-        throw new Error(`Database error: ${leadError.message}`);
-      }
-
-      console.log(`[${new Date().toISOString()}] Successfully inserted into Life table, got back data:`, leadData);
-      const leadId = leadData.id;
-      
-      // Send confirmation email and continue regardless of email success
-      try {
-        console.log(`[${new Date().toISOString()}] Attempting to send confirmation email`);
-        await sendConfirmationEmail(leadId, data);
-      } catch (emailError) {
-        console.error(`[${new Date().toISOString()}] Email sending process error:`, emailError);
-        // Continue with form submission even if email fails
-      }
-      
-      // Continue with HubSpot integration
-      try {
-        console.log(`[${new Date().toISOString()}] Creating HubSpot contact`);
-        const hubspotResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/create-hubspot-contact', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            leadId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone,
-            age: data.age,
-            gender: data.gender,
-            tobaccoUse: data.tobaccoUse,
-            coverageAmount: data.coverageAmount,
-            bestTimeToContact: data.bestTimeToContact,
-            zipCode: data.zipCode
-          }),
-        });
-        
-        if (!hubspotResponse.ok) {
-          const hubspotError = await hubspotResponse.text();
-          console.error(`[${new Date().toISOString()}] HubSpot integration error:`, hubspotError);
-        } else {
-          console.log(`[${new Date().toISOString()}] HubSpot contact created successfully`);
-        }
-      } catch (hubspotError) {
-        console.error(`[${new Date().toISOString()}] HubSpot integration error:`, hubspotError);
-      }
-      
-      // Show success message and redirect
-      toast({
-        title: "Form Submitted Successfully",
-        description: "We'll contact you shortly with your quote!",
-      });
-      
-      console.log(`[${new Date().toISOString()}] Form submission completed successfully, redirecting to success page`);
-      navigate('/appointment-success');
-      
-    } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] Form submission error:`, error);
-      setSubmitError(error.message || "An unexpected error occurred. Please try again.");
-      toast({
-        title: "Submission Failed",
-        description: error.message || "Please try again later.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    await submitForm(data);
   };
 
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel htmlFor="firstName">First Name*</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="firstName"
-                        placeholder="John"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel htmlFor="lastName">Last Name*</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="lastName"
-                        placeholder="Smith"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel htmlFor="email">Email Address*</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john.smith@example.com"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel htmlFor="phone">Phone Number*</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="(555) 123-4567"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
+        return <BasicInfoStep form={form} />;
       case 1:
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="age"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel htmlFor="age">Age*</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="age"
-                        type="number"
-                        placeholder="35"
-                        min="18"
-                        max="85"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>Gender*</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="flex gap-4 pt-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="male" id="male" />
-                          <Label htmlFor="male">Male</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="female" id="female" />
-                          <Label htmlFor="female">Female</Label>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="tobaccoUse"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Tobacco Use in the Last 12 Months?</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex gap-4 pt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="tobacco-yes" />
-                        <Label htmlFor="tobacco-yes">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="tobacco-no" />
-                        <Label htmlFor="tobacco-no">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="coverageAmount"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Coverage Amount*</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select coverage amount" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {coverageOptions.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
+        return <CoverageDetailsStep form={form} />;
       case 2:
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="bestTimeToContact"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Best Time to Contact</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-col gap-2 pt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="morning" id="time-morning" />
-                        <Label htmlFor="time-morning">Morning (8am - 12pm)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="afternoon" id="time-afternoon" />
-                        <Label htmlFor="time-afternoon">Afternoon (12pm - 5pm)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="evening" id="time-evening" />
-                        <Label htmlFor="time-evening">Evening (5pm - 8pm)</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="zipCode"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel htmlFor="zipCode">ZIP Code*</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="zipCode"
-                      placeholder="55305"
-                      maxLength={10}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex items-center gap-2 text-sm text-gray-500 pt-4">
-              <Lock className="h-4 w-4" />
-              <p>Your information is secure and will not be shared with third parties.</p>
-            </div>
-          </div>
-        );
+        return <ContactPreferencesStep form={form} />;
       default:
         return null;
     }
   };
 
-  
   return (
     <section id="lead-form" className="py-8 sm:py-12">
       <div className="container-custom max-w-3xl px-4 sm:px-6">
@@ -565,36 +114,7 @@ export const LeadForm = () => {
               </Alert>
             )}
             
-            <div className="flex justify-between mb-6 sm:mb-8">
-              {formSteps.map((step, index) => (
-                <div 
-                  key={index}
-                  className={`flex flex-col items-center ${
-                    index === currentStep ? "opacity-100" : "opacity-60"
-                  }`}
-                >
-                  <div 
-                    className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium ${
-                      index < currentStep
-                        ? "bg-green-100 text-green-600"
-                        : index === currentStep
-                        ? "bg-primary text-white"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {index < currentStep ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  <div className="mt-1 sm:mt-2 text-center">
-                    <p className="text-xs sm:text-sm font-medium">{step.title}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-500 hidden md:block">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <FormStepNavigation steps={formSteps} currentStep={currentStep} />
             
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
