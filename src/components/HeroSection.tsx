@@ -70,8 +70,8 @@ export const HeroSection = () => {
           <div className="relative">
             <div className="relative z-10 rounded-xl overflow-hidden shadow-xl animate-slide-in">
               <img 
-                src="https://images.unsplash.com/photo-1575504649362-733b213568f9?auto=format&fit=crop&q=80" 
-                alt="Happy family with father, mother, older daughter and younger son" 
+                src="https://images.unsplash.com/photo-1595467959776-81815d8d9059?auto=format&fit=crop&q=80" 
+                alt="Happy family with father, mother, daughter and son" 
                 className="w-full h-auto object-cover"
               />
             </div>
