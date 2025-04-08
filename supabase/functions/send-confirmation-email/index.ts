@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const resendApiKey = Deno.env.get("RESEND_API_KEY") || "re_9dANAi6v_4Dd2HjCNBnumxXv8LM6k4ftH";
+const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +23,10 @@ serve(async (req) => {
     
     if (!email) {
       throw new Error("Email is required");
+    }
+
+    if (!resendApiKey) {
+      throw new Error("Resend API key is not configured");
     }
 
     // Send confirmation email using Resend

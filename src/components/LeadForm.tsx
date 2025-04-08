@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type FormData = {
   firstName: string;
@@ -55,6 +56,7 @@ export const LeadForm = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -155,6 +157,7 @@ export const LeadForm = () => {
     }
     
     setIsSubmitting(true);
+    setSubmitError(null);
     
     try {
       console.log("Starting form submission process");
@@ -205,15 +208,18 @@ export const LeadForm = () => {
         }),
       });
 
+      const emailResult = await emailResponse.json();
+      
       if (!emailResponse.ok) {
-        console.error("Email sending failed:", await emailResponse.text());
+        console.error("Email sending failed:", emailResult);
+        throw new Error(`Failed to send confirmation email: ${emailResult.error || 'Unknown error'}`);
       } else {
-        console.log("Email sent successfully:", await emailResponse.json());
+        console.log("Email sent successfully:", emailResult);
       }
       
       // Create HubSpot contact
       console.log("Creating HubSpot contact");
-      fetch('/functions/v1/create-hubspot-contact', {
+      const hubspotResponse = await fetch('/functions/v1/create-hubspot-contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -231,9 +237,13 @@ export const LeadForm = () => {
           preferredContact: formData.preferredContact,
           zipCode: formData.zipCode
         }),
-      }).catch(error => {
-        console.error("HubSpot integration error:", error);
       });
+      
+      if (!hubspotResponse.ok) {
+        const hubspotError = await hubspotResponse.json();
+        console.error("HubSpot integration error:", hubspotError);
+        // We don't want to block the user flow if HubSpot fails, just log it
+      }
       
       toast({
         title: "Form Submitted Successfully",
@@ -243,6 +253,7 @@ export const LeadForm = () => {
       navigate('/appointment-success');
     } catch (error: any) {
       console.error("Form submission error:", error);
+      setSubmitError(error.message || "An unexpected error occurred. Please try again.");
       toast({
         title: "Submission Failed",
         description: error.message || "Please try again later.",
@@ -439,6 +450,13 @@ export const LeadForm = () => {
           </div>
           
           <div className="p-6">
+            {submitError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="flex justify-between mb-8">
               {formSteps.map((step, index) => (
                 <div 
