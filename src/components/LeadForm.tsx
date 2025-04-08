@@ -156,21 +156,19 @@ export const LeadForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Send confirmation email first to ensure it works even if the database submission fails
       const emailPromise = fetch('/functions/v1/send-confirmation-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          leadId: "pending", // We'll update this once we have the lead ID
+          leadId: "pending",
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
         }),
       });
 
-      // Insert into Life table
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -191,7 +189,6 @@ export const LeadForm = () => {
 
       const leadId = leadData.id;
       
-      // Now send the email with the correct lead ID
       const emailResponse = await emailPromise;
       if (!emailResponse.ok) {
         console.error("Email sending failed:", await emailResponse.text());
@@ -199,7 +196,6 @@ export const LeadForm = () => {
         console.log("Email sent successfully:", await emailResponse.json());
       }
       
-      // Try to create HubSpot contact, but don't block on it
       fetch('/functions/v1/create-hubspot-contact', {
         method: 'POST',
         headers: {
@@ -416,7 +412,7 @@ export const LeadForm = () => {
           <div className="bg-primary px-6 py-6 text-white">
             <div className="flex items-center justify-center gap-2 mb-2">
               <img 
-                src="/quotelinker-logo.png" 
+                src="/lovable-uploads/4a43f3ca-40c9-43b0-b9a5-a2106c990f37.png" 
                 alt="QuoteLinker Logo" 
                 className="h-10 w-auto invert" 
               />
