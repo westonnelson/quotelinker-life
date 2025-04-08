@@ -147,14 +147,15 @@ export const LeadForm = () => {
       const endTime = Date.now();
       console.log(`Email API request completed in ${endTime - startTime}ms`);
 
+      // Get the response data for better error logging
+      const responseData = await emailResponse.json();
+      
       if (!emailResponse.ok) {
-        const errorText = await emailResponse.text();
-        console.error("Email sending failed with status:", emailResponse.status, "Response:", errorText);
-        throw new Error(`Failed to send confirmation email: ${errorText || 'Server error'}`);
+        console.error("Email sending failed with status:", emailResponse.status, "Response:", responseData);
+        throw new Error(`Failed to send confirmation email: ${responseData.error || 'Server error'}`);
       }
       
-      const emailResult = await emailResponse.json();
-      console.log("Email sent successfully:", emailResult);
+      console.log("Email sent successfully:", responseData);
       
       toast({
         title: "Confirmation Email Sent",
@@ -162,13 +163,17 @@ export const LeadForm = () => {
       });
       
       return true;
-    } catch (emailError) {
+    } catch (emailError: any) {
       console.error("Email sending error:", emailError);
+      
+      // More informative toast message
       toast({
         title: "Email Notification Issue",
-        description: "We couldn't send you a confirmation email, but your quote request was saved.",
+        description: "We couldn't send you a confirmation email, but your quote request was saved. Our team will still contact you.",
         variant: "destructive"
       });
+      
+      // Still return true since this shouldn't block the form submission process
       return false;
     }
   };
@@ -207,9 +212,13 @@ export const LeadForm = () => {
       console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
-      // Now try to send the email
-      const emailSent = await sendConfirmationEmail(leadId, data);
-      console.log("Email sending completed, result:", emailSent);
+      // Now try to send the email but don't block the process if it fails
+      try {
+        await sendConfirmationEmail(leadId, data);
+      } catch (emailError) {
+        console.error("Email sending process error:", emailError);
+        // Continue with the form submission even if email fails
+      }
       
       // Try to create HubSpot contact if possible, but don't block the process
       try {

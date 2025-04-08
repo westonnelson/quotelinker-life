@@ -67,9 +67,9 @@ serve(async (req) => {
     
     // More detailed error handling for the response
     if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("Email API error response:", errorText);
-      throw new Error(`Email API error (${emailResponse.status}): ${errorText}`);
+      const errorData = await emailResponse.json().catch(() => null) || await emailResponse.text().catch(() => "Unknown error");
+      console.error("Email API error response:", JSON.stringify(errorData));
+      throw new Error(`Email API error (${emailResponse.status}): ${typeof errorData === 'string' ? errorData : JSON.stringify(errorData)}`);
     }
 
     const emailData = await emailResponse.json();
