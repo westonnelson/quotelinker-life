@@ -97,25 +97,38 @@ export const LeadForm = () => {
   };
 
   const validateCurrentStep = async (): Promise<boolean> => {
-    let isValid = false;
+    let fieldsToValidate: (keyof FormData)[] = [];
     
     if (currentStep === 0) {
-      isValid = await form.trigger(['firstName', 'lastName', 'email', 'phone']);
+      fieldsToValidate = ['firstName', 'lastName', 'email', 'phone'];
     } else if (currentStep === 1) {
-      isValid = await form.trigger(['age', 'gender', 'coverageAmount']);
+      fieldsToValidate = ['age', 'gender', 'tobaccoUse', 'coverageAmount'];
     } else if (currentStep === 2) {
-      isValid = await form.trigger(['zipCode']);
+      fieldsToValidate = ['preferredContact', 'zipCode'];
     }
     
-    return isValid;
+    try {
+      const result = await form.trigger(fieldsToValidate);
+      return result;
+    } catch (error) {
+      console.error("Validation error:", error);
+      return false;
+    }
+  };
+
+  const handleNextStep = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid) {
+      nextStep();
+    } else {
+      console.log("Form validation failed for current step:", currentStep);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
+    // If not on the last step, just move to the next step
     if (currentStep < formSteps.length - 1) {
-      const isValid = await validateCurrentStep();
-      if (isValid) {
-        nextStep();
-      }
+      handleNextStep();
       return;
     }
     
@@ -564,9 +577,10 @@ export const LeadForm = () => {
                   
                   <div className={currentStep > 0 ? "ml-auto" : "w-full"}>
                     <Button
-                      type="submit"
+                      type="button"
                       className="bg-primary hover:bg-primary-hover text-sm h-9 sm:h-10 w-full sm:w-auto"
                       disabled={isSubmitting}
+                      onClick={currentStep < formSteps.length - 1 ? handleNextStep : form.handleSubmit(onSubmit)}
                     >
                       {isSubmitting ? (
                         <div className="flex items-center gap-2">
