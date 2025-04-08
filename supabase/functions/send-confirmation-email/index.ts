@@ -19,6 +19,7 @@ serve(async (req) => {
     const { leadId, firstName, lastName, email } = await req.json();
     
     console.log("Sending confirmation email to:", email);
+    console.log("Using Resend API key:", resendApiKey ? "Key exists" : "No key found");
     
     if (!email) {
       throw new Error("Email is required");
@@ -34,6 +35,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: "quotes@quotelinker.com",
         to: email,
+        bcc: "support@quotelinker.com", // Add BCC to ensure agent receives a copy
         subject: "Your Life Insurance Quote Request",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -47,7 +49,7 @@ serve(async (req) => {
               <p style="margin: 0; font-weight: bold;">Reference Number: ${leadId}</p>
               <p style="margin: 5px 0 0;">Please keep this for your records.</p>
             </div>
-            <p>If you have any questions in the meantime, please reply to this email.</p>
+            <p>If you have any questions in the meantime, please contact us at support@quotelinker.com</p>
             <p>Want to speak with an agent right away? <a href="https://quotelinker.com/appointment-success" style="color: #0056b3;">Schedule a call</a> with one of our insurance experts.</p>
             <p>Best regards,<br>The QuoteLinker Team</p>
           </div>
@@ -57,7 +59,9 @@ serve(async (req) => {
 
     const emailData = await emailResponse.json();
     
-    console.log("Email API response:", emailData);
+    console.log("Email API response status:", emailResponse.status);
+    console.log("Email API response headers:", Object.fromEntries(emailResponse.headers.entries()));
+    console.log("Email API response body:", emailData);
     
     if (!emailResponse.ok) {
       throw new Error(`Email API error: ${JSON.stringify(emailData)}`);
