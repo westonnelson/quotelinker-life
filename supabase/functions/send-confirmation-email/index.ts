@@ -16,9 +16,23 @@ serve(async (req) => {
   }
 
   try {
-    const { leadId, firstName, lastName, email } = await req.json();
+    console.log(`[${new Date().toISOString()}] Received email request`);
     
-    console.log(`[${new Date().toISOString()}] Received request to send email to: ${email}`);
+    if (!req.body) {
+      console.error(`[${new Date().toISOString()}] No request body provided`);
+      throw new Error("No request body provided");
+    }
+    
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log(`[${new Date().toISOString()}] Request data:`, JSON.stringify(requestData));
+    } catch (parseError) {
+      console.error(`[${new Date().toISOString()}] Error parsing request body:`, parseError);
+      throw new Error("Invalid JSON in request body");
+    }
+    
+    const { leadId, firstName, lastName, email } = requestData;
     
     if (!email) {
       console.error(`[${new Date().toISOString()}] Missing email in request`);

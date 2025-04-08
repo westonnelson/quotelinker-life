@@ -22,14 +22,18 @@ export const useLeadFormSubmission = () => {
       
       // First, save the lead to the database
       const { data: leadData, error: leadError } = await supabase
-        .from('Life')
+        .from('leads')
         .insert({
-          name: `${data.firstName} ${data.lastName}`,
+          first_name: data.firstName,
+          last_name: data.lastName,
           email: data.email,
           phone: data.phone,
           age: data.age,
           gender: data.gender,
-          tobacco: data.tobaccoUse
+          tobacco_use: data.tobaccoUse,
+          coverage_amount: data.coverageAmount,
+          preferred_contact: data.bestTimeToContact,
+          zip_code: data.zipCode
         })
         .select()
         .single();
@@ -39,38 +43,64 @@ export const useLeadFormSubmission = () => {
         throw new Error(`Database error: ${leadError.message}`);
       }
 
-      console.log(`[${new Date().toISOString()}] Successfully inserted into Life table, got back data:`, leadData);
+      console.log(`[${new Date().toISOString()}] Successfully inserted into leads table, got back data:`, leadData);
       const leadId = leadData.id;
       
-      // Send confirmation email and continue regardless of email success
-      try {
-        console.log(`[${new Date().toISOString()}] Attempting to send confirmation email`);
-        const emailSuccess = await sendConfirmationEmail(leadId, data);
+      // Also insert into Life table for backward compatibility
+      const { error: lifeError } = await supabase
+        .from('Life')
+        .insert({
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          phone: data.phone,
+          age: data.age,
+          gender: data.gender,
+          tobacco: data.tobaccoUse
+        });
         
-        if (emailSuccess) {
-          toast({
-            title: "Confirmation Email Sent",
-            description: "Check your inbox for details about your quote request.",
-          });
-        } else {
-          toast({
-            title: "Email Notification Issue",
-            description: "We couldn't send you a confirmation email, but your quote request was saved. Our team will still contact you.",
-            variant: "destructive"
-          });
-        }
-      } catch (emailError) {
-        console.error(`[${new Date().toISOString()}] Email sending process error:`, emailError);
-        // Continue with form submission even if email fails
+      if (lifeError) {
+        console.error(`[${new Date().toISOString()}] Error inserting into Life table:`, lifeError);
+        // Don't throw here, we'll continue with the lead we already created
       }
       
-      // Continue with HubSpot integration
+      // Send confirmation email - we'll catch errors but continue with form submission
+      let emailSent = false;
+      try {
+        console.log(`[${new Date().toISOString()}] Attempting to send confirmation email`);
+        await sendConfirmationEmail(leadId, data);
+        emailSent = true;
+        
+        // Update the email_sent flag in the database
+        const { error: updateError } = await supabase
+          .from('leads')
+          .update({ email_sent: true })
+          .eq('id', leadId);
+          
+        if (updateError) {
+          console.error(`[${new Date().toISOString()}] Error updating email_sent flag:`, updateError);
+        }
+        
+        toast({
+          title: "Confirmation Email Sent",
+          description: "Check your inbox for details about your quote request.",
+        });
+      } catch (emailError: any) {
+        console.error(`[${new Date().toISOString()}] Email sending error:`, emailError);
+        toast({
+          title: "Email Notification Issue",
+          description: "We couldn't send you a confirmation email, but your quote request was saved. Our team will still contact you.",
+          variant: "destructive"
+        });
+      }
+      
+      // Try to create HubSpot contact - continue on error
       try {
         console.log(`[${new Date().toISOString()}] Creating HubSpot contact`);
         const hubspotResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/create-hubspot-contact', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNydnFqbW56cmNvamhyd3VpaG5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0NzUyMjYsImV4cCI6MjA1OTA1MTIyNn0.LVSw8UEVP0yGuvFV0sn2Cs-gX8l_WDjgY37UCEuSuD0`
           },
           body: JSON.stringify({ 
             leadId,

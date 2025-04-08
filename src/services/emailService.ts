@@ -1,6 +1,5 @@
 
 import { LeadFormData } from "@/utils/formSchemas";
-import { useToast } from "@/hooks/use-toast";
 
 export const sendConfirmationEmail = async (
   leadId: string,
@@ -16,6 +15,7 @@ export const sendConfirmationEmail = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNydnFqbW56cmNvamhyd3VpaG5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0NzUyMjYsImV4cCI6MjA1OTA1MTIyNn0.LVSw8UEVP0yGuvFV0sn2Cs-gX8l_WDjgY37UCEuSuD0`
       },
       body: JSON.stringify({ 
         leadId,
@@ -26,7 +26,7 @@ export const sendConfirmationEmail = async (
     });
     
     const endTime = Date.now();
-    console.log(`[${new Date().toISOString()}] Email API request completed in ${endTime - startTime}ms`);
+    console.log(`[${new Date().toISOString()}] Email API request completed in ${endTime - startTime}ms with status: ${emailResponse.status}`);
 
     // Always try to get the response text first for better debugging
     const responseText = await emailResponse.text();
@@ -59,6 +59,6 @@ export const sendConfirmationEmail = async (
     return true;
   } catch (emailError: any) {
     console.error(`[${new Date().toISOString()}] Email sending error:`, emailError);
-    return false;
+    throw emailError; // Re-throw so we can handle it in the form submission
   }
 };
