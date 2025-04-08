@@ -147,21 +147,29 @@ export const LeadForm = () => {
       const endTime = Date.now();
       console.log(`[${new Date().toISOString()}] Email API request completed in ${endTime - startTime}ms`);
 
+      // Always try to get the response text first for better debugging
+      const responseText = await emailResponse.text();
+      console.log(`[${new Date().toISOString()}] Raw email API response:`, responseText);
+      
       let responseData;
       try {
-        responseData = await emailResponse.json();
-        console.log(`[${new Date().toISOString()}] Email API response parsed as JSON:`, responseData);
+        // Only parse as JSON if it looks like JSON
+        if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
+          responseData = JSON.parse(responseText);
+          console.log(`[${new Date().toISOString()}] Email API response parsed as JSON:`, responseData);
+        } else {
+          console.log(`[${new Date().toISOString()}] Response is not JSON, using as is`);
+          responseData = { message: responseText };
+        }
       } catch (parseError) {
         console.error(`[${new Date().toISOString()}] Failed to parse response as JSON:`, parseError);
-        const textResponse = await emailResponse.text();
-        console.error(`[${new Date().toISOString()}] Raw response text:`, textResponse);
-        responseData = { error: "Invalid response format" };
+        responseData = { error: "Invalid response format", text: responseText };
       }
       
       if (!emailResponse.ok) {
         console.error(`[${new Date().toISOString()}] Email sending failed with status:`, emailResponse.status, "Response:", responseData);
         throw new Error(`Failed to send confirmation email: ${
-          responseData?.error || responseData?.message || 'Server error'
+          responseData?.error || responseData?.message || responseData?.text || 'Server error'
         }`);
       }
       
@@ -197,7 +205,9 @@ export const LeadForm = () => {
     
     try {
       console.log(`[${new Date().toISOString()}] Starting form submission process`);
+      console.log(`[${new Date().toISOString()}] Form data:`, data);
       
+      // First, save the lead to the database
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -228,8 +238,9 @@ export const LeadForm = () => {
         // Continue with form submission even if email fails
       }
       
+      // Continue with HubSpot integration
       try {
-        console.log("Creating HubSpot contact");
+        console.log(`[${new Date().toISOString()}] Creating HubSpot contact`);
         const hubspotResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/create-hubspot-contact', {
           method: 'POST',
           headers: {
@@ -252,19 +263,21 @@ export const LeadForm = () => {
         
         if (!hubspotResponse.ok) {
           const hubspotError = await hubspotResponse.text();
-          console.error("HubSpot integration error:", hubspotError);
+          console.error(`[${new Date().toISOString()}] HubSpot integration error:`, hubspotError);
         } else {
-          console.log("HubSpot contact created successfully");
+          console.log(`[${new Date().toISOString()}] HubSpot contact created successfully`);
         }
       } catch (hubspotError) {
-        console.error("HubSpot integration error:", hubspotError);
+        console.error(`[${new Date().toISOString()}] HubSpot integration error:`, hubspotError);
       }
       
+      // Show success message and redirect
       toast({
         title: "Form Submitted Successfully",
         description: "We'll contact you shortly with your quote!",
       });
       
+      console.log(`[${new Date().toISOString()}] Form submission completed successfully, redirecting to success page`);
       navigate('/appointment-success');
       
     } catch (error: any) {

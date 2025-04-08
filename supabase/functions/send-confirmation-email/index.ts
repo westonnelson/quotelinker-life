@@ -18,18 +18,19 @@ serve(async (req) => {
   try {
     const { leadId, firstName, lastName, email } = await req.json();
     
-    console.log(`[${new Date().toISOString()}] Starting email sending process for: ${email}`);
-    console.log(`[${new Date().toISOString()}] Resend API key status: ${resendApiKey ? "Available" : "Missing"}`);
+    console.log(`[${new Date().toISOString()}] Received request to send email to: ${email}`);
     
     if (!email) {
+      console.error(`[${new Date().toISOString()}] Missing email in request`);
       throw new Error("Email is required");
     }
 
     if (!resendApiKey) {
+      console.error(`[${new Date().toISOString()}] Resend API key not configured`);
       throw new Error("Resend API key is not configured");
     }
 
-    console.log(`[${new Date().toISOString()}] Preparing to send confirmation email to: ${email}`);
+    console.log(`[${new Date().toISOString()}] Sending confirmation email to: ${email}`);
     
     // Send confirmation email using Resend
     const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -64,29 +65,13 @@ serve(async (req) => {
     
     console.log(`[${new Date().toISOString()}] Email API response status: ${emailResponse.status}`);
     
-    let responseText;
-    let responseData;
-    
-    try {
-      // Try to parse as JSON first
-      responseData = await emailResponse.json();
-      responseText = JSON.stringify(responseData);
-      console.log(`[${new Date().toISOString()}] Email API response parsed as JSON:`, responseText);
-    } catch (parseError) {
-      // If that fails, get as text
-      try {
-        responseText = await emailResponse.text();
-        console.log(`[${new Date().toISOString()}] Email API raw response text:`, responseText);
-      } catch (textError) {
-        responseText = "Could not read response";
-        console.error(`[${new Date().toISOString()}] Could not read email API response:`, textError);
-      }
-    }
+    const responseData = await emailResponse.json();
+    console.log(`[${new Date().toISOString()}] Email API response:`, JSON.stringify(responseData));
     
     // Check if the response was successful
     if (!emailResponse.ok) {
-      console.error(`[${new Date().toISOString()}] Email API error (${emailResponse.status}):`, responseText);
-      throw new Error(`Email API error (${emailResponse.status}): ${responseText}`);
+      console.error(`[${new Date().toISOString()}] Email API error (${emailResponse.status}):`, JSON.stringify(responseData));
+      throw new Error(`Email API error (${emailResponse.status}): ${JSON.stringify(responseData)}`);
     }
 
     console.log(`[${new Date().toISOString()}] Email sent successfully to ${email}, message ID: ${responseData?.id || "unknown"}`);
