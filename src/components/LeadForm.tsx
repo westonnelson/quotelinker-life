@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Lock, Check, ChevronRight } from 'lucide-react';
@@ -118,7 +117,7 @@ export const LeadForm = () => {
     const isValid = await validateCurrentStep();
     if (isValid) {
       nextStep();
-      setSubmitError(null);  // Clear any previous errors when moving to next step
+      setSubmitError(null);
     } else {
       console.log("Form validation failed for current step:", currentStep);
     }
@@ -147,12 +146,21 @@ export const LeadForm = () => {
       const endTime = Date.now();
       console.log(`Email API request completed in ${endTime - startTime}ms`);
 
-      // Get the response data for better error logging
-      const responseData = await emailResponse.json();
+      let responseData;
+      try {
+        responseData = await emailResponse.json();
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        responseData = { error: "Invalid response format" };
+      }
+      
+      console.log("Full email API response:", responseData);
       
       if (!emailResponse.ok) {
         console.error("Email sending failed with status:", emailResponse.status, "Response:", responseData);
-        throw new Error(`Failed to send confirmation email: ${responseData.error || 'Server error'}`);
+        throw new Error(`Failed to send confirmation email: ${
+          responseData?.error || responseData?.message || 'Server error'
+        }`);
       }
       
       console.log("Email sent successfully:", responseData);
@@ -166,14 +174,12 @@ export const LeadForm = () => {
     } catch (emailError: any) {
       console.error("Email sending error:", emailError);
       
-      // More informative toast message
       toast({
         title: "Email Notification Issue",
         description: "We couldn't send you a confirmation email, but your quote request was saved. Our team will still contact you.",
         variant: "destructive"
       });
       
-      // Still return true since this shouldn't block the form submission process
       return false;
     }
   };
@@ -190,7 +196,6 @@ export const LeadForm = () => {
     try {
       console.log("Starting form submission process");
       
-      // First, store the lead in the database
       const { data: leadData, error: leadError } = await supabase
         .from('Life')
         .insert({
@@ -212,15 +217,14 @@ export const LeadForm = () => {
       console.log("Successfully inserted into Life table, got back data:", leadData);
       const leadId = leadData.id;
       
-      // Now try to send the email but don't block the process if it fails
       try {
-        await sendConfirmationEmail(leadId, data);
+        console.log("Attempting to send confirmation email");
+        const emailResult = await sendConfirmationEmail(leadId, data);
+        console.log("Email sending process completed:", emailResult ? "Success" : "Failed but continuing");
       } catch (emailError) {
-        console.error("Email sending process error:", emailError);
-        // Continue with the form submission even if email fails
+        console.error("Completely failed email sending process:", emailError);
       }
       
-      // Try to create HubSpot contact if possible, but don't block the process
       try {
         console.log("Creating HubSpot contact");
         const hubspotResponse = await fetch('https://srvqjmnzrcojhrwuihni.supabase.co/functions/v1/create-hubspot-contact', {
@@ -251,16 +255,13 @@ export const LeadForm = () => {
         }
       } catch (hubspotError) {
         console.error("HubSpot integration error:", hubspotError);
-        // Continue with the process even if HubSpot fails
       }
       
-      // Show success message and navigate
       toast({
         title: "Form Submitted Successfully",
         description: "We'll contact you shortly with your quote!",
       });
       
-      // Redirect to success page
       navigate('/appointment-success');
       
     } catch (error: any) {
@@ -276,7 +277,6 @@ export const LeadForm = () => {
     }
   };
 
-  // Render form steps
   const renderStep = () => {
     switch (currentStep) {
       case 0:

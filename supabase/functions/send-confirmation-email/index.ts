@@ -40,8 +40,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "QuoteLinker <support@quotelinker.com>",
-        to: [email], // Ensure email is in an array as per Resend's API
-        bcc: ["support@quotelinker.com"], // Ensure BCC is an array
+        to: email, // Sending to a single recipient
+        bcc: "support@quotelinker.com", // Single BCC recipient
         subject: "Your Life Insurance Quote Request",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -65,18 +65,37 @@ serve(async (req) => {
     
     console.log("Email API response status:", emailResponse.status);
     
-    // More detailed error handling for the response
+    let responseText;
+    let responseData;
+    
+    try {
+      // Try to parse as JSON first
+      responseData = await emailResponse.json();
+      responseText = JSON.stringify(responseData);
+    } catch (parseError) {
+      // If that fails, get as text
+      try {
+        responseText = await emailResponse.text();
+      } catch (textError) {
+        responseText = "Could not read response";
+      }
+    }
+    
+    // Detailed logging regardless of success or failure
+    console.log("Email API complete response:", responseText);
+    
     if (!emailResponse.ok) {
-      const errorData = await emailResponse.json().catch(() => null) || await emailResponse.text().catch(() => "Unknown error");
-      console.error("Email API error response:", JSON.stringify(errorData));
-      throw new Error(`Email API error (${emailResponse.status}): ${typeof errorData === 'string' ? errorData : JSON.stringify(errorData)}`);
+      console.error("Email API error response:", responseText);
+      throw new Error(`Email API error (${emailResponse.status}): ${responseText}`);
     }
 
-    const emailData = await emailResponse.json();
-    console.log("Email sent successfully, response:", emailData);
+    console.log("Email sent successfully, response:", responseText);
 
     return new Response(
-      JSON.stringify({ success: true, messageId: emailData.id }),
+      JSON.stringify({ 
+        success: true, 
+        messageId: responseData?.id || "unknown" 
+      }),
       {
         headers: {
           "Content-Type": "application/json",
